@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: multimodal_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-multimodal}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Los .sql se ejecutan en orden alfabético la PRIMERA vez que arranca el volumen
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-multimodal}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Opción B: el backend también corre en Docker. Para desarrollar en local
+  # (Opción A) puedes comentar este servicio y correr `uvicorn` en tu máquina.
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: multimodal_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres        # nombre del servicio, NO localhost
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-multimodal}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src:ro
+    command: uvicorn src.backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  pgdata:

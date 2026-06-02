@@ -1,0 +1,24 @@
+# Núcleo / backend
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+
+# Base de datos
+psycopg[binary]>=3.1
+psycopg_pool>=3.2
+pgvector>=0.2.5
+
+# Modalidades (los ingenieros añaden lo que necesiten)
+numpy>=1.26
+scikit-learn>=1.4        # K-Means (imagen/audio)
+nltk>=3.8                # tokenización/stopwords/stemming (texto)
+opencv-contrib-python>=4.9   # SIFT (imagen)
+librosa>=0.10            # MFCC (audio)
+
+# Evaluación
+matplotlib>=3.8
+pandas>=2.2
+
+# Dev
+pytest>=8.0
+ruff>=0.4

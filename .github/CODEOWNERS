@@ -1,0 +1,17 @@
+# El Tech Lead revisa SIEMPRE el núcleo, la infraestructura y la BD.
+# Reemplaza @tech-lead por tu usuario de GitHub, y los demás por los del equipo.
+
+# Toda la arquitectura común y la infra -> Tech Lead
+/src/core/        @tech-lead
+/src/db/          @tech-lead
+/docker/          @tech-lead
+/docker-compose.yml  @tech-lead
+/.github/         @tech-lead
+
+# Por modalidad (el dueño + el Tech Lead)
+/src/text/        @ing-texto   @tech-lead
+/src/image/       @ing-imagen  @tech-lead
+/src/audio/       @ing-audio   @tech-lead
+/src/backend/     @ing-backend @tech-lead
+/src/eval/        @ing-eval    @tech-lead
+/src/baselines/   @ing-texto   @ing-imagen @ing-audio @tech-lead

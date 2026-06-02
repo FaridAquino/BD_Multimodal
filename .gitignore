@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Entorno
+.env
+
+# Datos (no se versionan; se descargan con scripts/download_data.sh)
+data/raw/
+data/processed/
+*.parquet
+
+# Resultados pesados (guarda solo gráficos finales y CSV resumen)
+results/raw/
+
+# SO / editor
+.DS_Store
+.idea/
+.vscode/
