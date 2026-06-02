@@ -7,7 +7,6 @@ sea válida. Mide latencia y memoria de `to_tsvector` + `@@` con índice GIN.
 from __future__ import annotations
 
 from src.core import SearchResult
-from src.db.connection import get_conn
 
 
 def search_fulltext(query: str, k: int = 10) -> list[SearchResult]:

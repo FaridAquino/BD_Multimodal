@@ -3,7 +3,7 @@ Sirve de smoke test en CI mientras las modalidades se implementan."""
 import inspect
 
 from src.core import (
-    Chunk, Descriptor, Histogram, Modality, SearchResult,
+    Chunk, Histogram, Modality, SearchResult,
     Splitter, Extractor, Codebook, CodebookBuilder, InvertedIndex,
     ModalityPipeline,
 )
