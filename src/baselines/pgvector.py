@@ -6,7 +6,6 @@ Almacena los MISMOS histogramas como vectores y busca por similitud con `<->`.
 from __future__ import annotations
 
 from src.core import SearchResult
-from src.db.connection import get_conn
 
 
 def search_vector(modality: str, query_vec, k: int = 10) -> list[SearchResult]:

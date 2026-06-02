@@ -12,7 +12,7 @@ entrega sus implementaciones; el Tech Lead las ensambla aquí.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from typing import Iterable
 
 from .interfaces import CodebookBuilder, Extractor, InvertedIndex, Splitter
 from .interfaces import Codebook

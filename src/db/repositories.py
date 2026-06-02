@@ -8,7 +8,6 @@ from __future__ import annotations
 from typing import Iterable
 
 from src.core import Chunk, Histogram
-from .connection import get_conn
 
 
 def insert_source(source_id: str, modality: str, uri: str, metadata: dict) -> None:
