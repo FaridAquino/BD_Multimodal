@@ -1,16 +1,29 @@
--- Índices nativos para el Lado B de la comparación. OWNER: Tech Lead.
+-- =====================================================================
+-- ÍNDICES para el LADO B (baselines nativos). OWNER: Tech Lead.
+-- Se ejecuta DESPUÉS de 02_schema.sql.
+--
+-- DECISIÓN DE MÉTRICA (pendiente de confirmar por el equipo):
+--   Si NO normalizan histogramas -> vector_l2_ops (euclidiana, por defecto).
+--   Si SÍ normalizan histogramas -> vector_cosine_ops (coseno).
+--   La métrica del Lado B debería coincidir con la del Lado A para una
+--   comparación justa en la Fase 4.
+-- =====================================================================
 
--- GIN para full-text de texto (App 2: búsqueda por letra).
-CREATE INDEX IF NOT EXISTS idx_chunks_tsv ON chunks USING gin (tsv);
-
--- Alternativa GiST (para comparar GIN vs GiST si el equipo lo desea):
+-- ---------- TEXTO: full-text con GIN sobre tsvector ----------
+CREATE INDEX idx_chunks_tsv_gin ON chunks USING gin (tsv);
+-- Comparar GIN vs GiST (lo pide el enunciado):
 -- CREATE INDEX idx_chunks_tsv_gist ON chunks USING gist (tsv);
 
--- HNSW para búsqueda vectorial aproximada (imagen/audio).
--- Usa la distancia que corresponda a tu histograma (L2 por defecto).
-CREATE INDEX IF NOT EXISTS idx_hist_embedding_hnsw
-    ON histograms USING hnsw (embedding vector_l2_ops);
+-- ---------- IMAGEN: pgvector HNSW ----------
+CREATE INDEX idx_emb_image_hnsw
+    ON embeddings_image USING hnsw (embedding vector_l2_ops);
 
--- Alternativa IVFFlat (para comparar HNSW vs IVF):
--- CREATE INDEX idx_hist_embedding_ivf
---     ON histograms USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);
+-- ---------- AUDIO: pgvector HNSW ----------
+CREATE INDEX idx_emb_audio_hnsw
+    ON embeddings_audio USING hnsw (embedding vector_l2_ops);
+
+-- ---------- Alternativa IVFFlat (comparar HNSW vs IVF) ----------
+-- CREATE INDEX idx_emb_image_ivf ON embeddings_image
+--     USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);
+-- CREATE INDEX idx_emb_audio_ivf ON embeddings_audio
+--     USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);
