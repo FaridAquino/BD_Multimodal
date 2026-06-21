@@ -28,6 +28,46 @@ abstractas). Cada modalidad lo implementa de forma independiente:
 
 `core/pipeline.py` orquesta las cuatro etapas sin conocer la modalidad concreta.
 
+## Procesamiento de imágenes
+
+La modalidad **imagen** aplica el paradigma común con la técnica clásica de
+*Bag of Visual Words*:
+
+```
+imagen → patches (rejilla rows×cols) → SIFT (128-d) → codebook K-Means
+       → histograma de visual words → índice invertido (Lado A) / pgvector (Lado B)
+```
+
+Módulos en `src/image/` (cada uno implementa una interfaz de `core`):
+
+| Archivo                  | Clase                                   | Rol                                                        |
+|--------------------------|-----------------------------------------|------------------------------------------------------------|
+| `splitter.py`            | `PatchSplitter`                         | Parte la imagen en una rejilla `rows×cols`; un patch = un chunk. |
+| `extractor.py`           | `SiftExtractor`                         | Descriptores SIFT (128-d) por patch.                       |
+| `codebook.py`            | `KMeansVisualBuilder` / `VisualCodebook`| Entrena las *visual words* (K-Means) y codifica histogramas. |
+| `index.py`               | `VisualInvertedIndex`                   | Índice invertido propio (Lado A), búsqueda por coseno.     |
+
+**Persistencia.** Los datos se guardan en PostgreSQL (`sources`, `chunks`,
+`codebooks`, `histograms` y `embeddings_image` con `vector(256)` = `k`) y los
+modelos entrenados en `models/image/` (`codebook_image.npy` y el índice
+`index_image.pkl`).
+
+**Lado A vs Lado B.** El Lado A es el índice invertido propio sobre histogramas
+(`index.py`); el Lado B usa pgvector (operador `<=>`, distancia coseno) sobre
+`embeddings_image`. `scripts/probe_query.py` ejecuta ambos y compara rankings y
+tiempos.
+
+Ejecución del pipeline (con PostgreSQL levantado y desde la raíz):
+
+```bash
+python -m scripts.ingest --limit 112 --truncate   # split → SIFT → codebook → insert
+python -m scripts.build_index                      # índice Lado A → models/image/index_image.pkl
+python -m scripts.probe_query --image data/raw/fashion-dataset/images/10000.jpg --top 5
+```
+
+Pruebas de validación por etapa (sin tocar la BD) en `scripts/probes/image/`:
+`probe_splitter.py`, `probe_extractor.py` y `probe_codebook.py`.
+
 ## Puesta en marcha
 
 Requisitos: Docker + Docker Compose. (Para desarrollar en local: Python 3.11.)
