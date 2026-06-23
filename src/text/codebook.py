@@ -1,6 +1,7 @@
-"""Codebook lingüístico: top-k palabras más frecuentes.  OWNER: Ing. Texto."""
+"""Codebook lingüístico: top-k palabras más frecuentes."""
 from __future__ import annotations
 
+import json
 from collections import Counter
 from typing import Sequence
 
@@ -9,11 +10,21 @@ from src.core import Codebook, CodebookBuilder, Descriptor, Histogram
 
 class LinguisticCodebook(Codebook):
     def __init__(self, vocab: dict[str, int]):
-        self._vocab = vocab  # término -> codeword_id
+        self._vocab = vocab
 
     @property
     def size(self) -> int:
         return len(self._vocab)
+
+    def save(self, path: str) -> None:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(self._vocab, f, ensure_ascii=False)
+
+    @classmethod
+    def load(cls, path: str) -> "LinguisticCodebook":
+        with open(path, encoding="utf-8") as f:
+            vocab = json.load(f)
+        return cls({term: int(cid) for term, cid in vocab.items()})
 
     def encode(self, descriptor: Descriptor) -> Histogram:
         counts: dict[int, int] = {}
