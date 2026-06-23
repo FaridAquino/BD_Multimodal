@@ -1,14 +1,11 @@
-"""Índice invertido por BSBI (OPCIONAL, baseline comparativo).  OWNER: Ing. Texto.
-
-Solo si el equipo decide comparar SPIMI vs BSBI en la Fase 4. Si no, este archivo
-queda como NotImplementedError y no se evalúa.
-"""
+"""Índice invertido por BSBI para texto (baseline comparativo)."""
 from __future__ import annotations
 
 import heapq
 import json
 import math
 import os
+import pickle
 import tempfile
 from collections import defaultdict
 from typing import Iterable
@@ -17,6 +14,8 @@ from src.core import Histogram, InvertedIndex, SearchResult
 
 
 class BsbiIndex(InvertedIndex):
+    FORMAT_VERSION = 1
+
     def __init__(self, block_size: int = 100_000):
         self.block_size = block_size
         self._block: list[tuple[int, str, int]] = []
@@ -24,12 +23,14 @@ class BsbiIndex(InvertedIndex):
         self._block_paths: list[str] = []
         self._index: dict[int, list[tuple[str, int]]] = {}
         self._doc_norms: dict[str, float] = {}
+        self._doc_source: dict[str, str] = {}
         self._work_dir: str | None = None
 
     def build(self, histograms: Iterable[Histogram]) -> None:
         self._work_dir = tempfile.mkdtemp(prefix="bsbi_")
         for hist in histograms:
             doc_id = hist.chunk_id or hist.source_id
+            self._doc_source[doc_id] = hist.source_id
             self._doc_count += 1
             for cw_id, tf in hist.counts.items():
                 self._block.append((cw_id, doc_id, tf))
@@ -95,7 +96,41 @@ class BsbiIndex(InvertedIndex):
         for doc_id, raw_score in scores.items():
             d_norm = self._doc_norms.get(doc_id, 1.0)
             cos = raw_score / (q_norm * d_norm) if d_norm > 0 else 0.0
-            source_id = doc_id.split(":")[0]
+            source_id = self._doc_source.get(doc_id, doc_id.split(":")[0])
             results.append(SearchResult(source_id=source_id, score=cos, chunk_id=doc_id))
         results.sort(key=lambda r: r.score, reverse=True)
         return results[:k]
+
+    def save(self, path: str) -> None:
+        data = {
+            "version": self.FORMAT_VERSION,
+            "index": self._index,
+            "doc_norms": self._doc_norms,
+            "doc_count": self._doc_count,
+            "doc_source": self._doc_source,
+        }
+        with open(path, "wb") as f:
+            pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    @classmethod
+    def load(cls, path: str) -> "BsbiIndex":
+        with open(path, "rb") as f:
+            data = pickle.load(f)
+        if data.get("version") != cls.FORMAT_VERSION:
+            raise ValueError(
+                f"Versión de índice incompatible: {data.get('version')} "
+                f"!= {cls.FORMAT_VERSION}. Reconstruye el índice."
+            )
+        ix = cls()
+        ix._index = data["index"]
+        ix._doc_norms = data["doc_norms"]
+        ix._doc_count = data["doc_count"]
+        ix._doc_source = data.get("doc_source", {})
+        return ix
+
+    def stats(self) -> dict:
+        return {
+            "n_chunks": self._doc_count,
+            "n_terms": len(self._index),
+            "n_postings": sum(len(v) for v in self._index.values()),
+        }

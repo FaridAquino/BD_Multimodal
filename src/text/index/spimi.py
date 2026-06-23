@@ -1,14 +1,10 @@
-"""Índice invertido por SPIMI (OBLIGATORIO por enunciado).  OWNER: Ing. Texto.
-
-Single-Pass In-Memory Indexing: construye diccionario + posting lists por bloque
-en memoria, vuelca a disco al llenarse, y fusiona al final. Implementa
-core.interfaces.InvertedIndex.
-"""
+"""Índice invertido por SPIMI para texto."""
 from __future__ import annotations
 
 import json
 import math
 import os
+import pickle
 import tempfile
 from collections import defaultdict
 from typing import Iterable
@@ -17,6 +13,8 @@ from src.core import Histogram, InvertedIndex, SearchResult
 
 
 class SpimiIndex(InvertedIndex):
+    FORMAT_VERSION = 1
+
     def __init__(self, block_size: int = 100_000):
         self.block_size = block_size
         self._dict: dict[int, list[tuple[str, int]]] = {}
@@ -25,12 +23,14 @@ class SpimiIndex(InvertedIndex):
         self._block_paths: list[str] = []
         self._index: dict[int, list[tuple[str, int]]] = {}
         self._doc_norms: dict[str, float] = {}
+        self._doc_source: dict[str, str] = {}
         self._work_dir: str | None = None
 
     def build(self, histograms: Iterable[Histogram]) -> None:
         self._work_dir = tempfile.mkdtemp(prefix="spimi_")
         for hist in histograms:
             doc_id = hist.chunk_id or hist.source_id
+            self._doc_source[doc_id] = hist.source_id
             self._doc_count += 1
             for cw_id, tf in hist.counts.items():
                 self._dict.setdefault(cw_id, []).append((doc_id, tf))
@@ -52,12 +52,14 @@ class SpimiIndex(InvertedIndex):
         self._postings_count = 0
 
     def _merge_blocks(self) -> None:
-        merged: dict[int, list[tuple[str, int]]] = {}
+        acc: dict[int, dict[str, int]] = {}
         for path in self._block_paths:
             with open(path) as f:
                 for term, postings in json.load(f):
-                    merged.setdefault(term, []).extend(postings)
-        self._index = merged
+                    bucket = acc.setdefault(term, {})
+                    for doc_id, tf in postings:
+                        bucket[doc_id] = bucket.get(doc_id, 0) + tf
+        self._index = {t: list(d.items()) for t, d in acc.items()}
 
     def _compute_doc_norms(self) -> None:
         doc_freq = {t: len(ps) for t, ps in self._index.items()}
@@ -95,7 +97,41 @@ class SpimiIndex(InvertedIndex):
         for doc_id, raw_score in scores.items():
             d_norm = self._doc_norms.get(doc_id, 1.0)
             cos = raw_score / (q_norm * d_norm) if d_norm > 0 else 0.0
-            source_id = doc_id.split(":")[0]
+            source_id = self._doc_source.get(doc_id, doc_id.split(":")[0])
             results.append(SearchResult(source_id=source_id, score=cos, chunk_id=doc_id))
         results.sort(key=lambda r: r.score, reverse=True)
         return results[:k]
+
+    def save(self, path: str) -> None:
+        data = {
+            "version": self.FORMAT_VERSION,
+            "index": self._index,
+            "doc_norms": self._doc_norms,
+            "doc_count": self._doc_count,
+            "doc_source": self._doc_source,
+        }
+        with open(path, "wb") as f:
+            pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    @classmethod
+    def load(cls, path: str) -> "SpimiIndex":
+        with open(path, "rb") as f:
+            data = pickle.load(f)
+        if data.get("version") != cls.FORMAT_VERSION:
+            raise ValueError(
+                f"Versión de índice incompatible: {data.get('version')} "
+                f"!= {cls.FORMAT_VERSION}. Reconstruye el índice."
+            )
+        ix = cls()
+        ix._index = data["index"]
+        ix._doc_norms = data["doc_norms"]
+        ix._doc_count = data["doc_count"]
+        ix._doc_source = data.get("doc_source", {})
+        return ix
+
+    def stats(self) -> dict:
+        return {
+            "n_chunks": self._doc_count,
+            "n_terms": len(self._index),
+            "n_postings": sum(len(v) for v in self._index.values()),
+        }
