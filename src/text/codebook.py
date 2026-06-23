@@ -1,6 +1,6 @@
-"""Codebook lingüístico: top-k palabras más frecuentes.  OWNER: Ing. Texto."""
 from __future__ import annotations
 
+from collections import Counter
 from typing import Sequence
 
 from src.core import Codebook, CodebookBuilder, Descriptor, Histogram
@@ -15,8 +15,16 @@ class LinguisticCodebook(Codebook):
         return len(self._vocab)
 
     def encode(self, descriptor: Descriptor) -> Histogram:
-        # TODO(texto): contar términos del descriptor que están en el top-k.
-        raise NotImplementedError
+        counts: dict[int, int] = {}
+        for token in descriptor.vector:
+            cid = self._vocab.get(token)
+            if cid is not None:
+                counts[cid] = counts.get(cid, 0) + 1
+        return Histogram(
+            chunk_id=descriptor.chunk.chunk_id or "",
+            source_id=descriptor.chunk.source_id,
+            counts=counts,
+        )
 
 
 class TopKCodebookBuilder(CodebookBuilder):
@@ -24,5 +32,9 @@ class TopKCodebookBuilder(CodebookBuilder):
         self.k = k
 
     def build(self, descriptors: Sequence[Descriptor]) -> Codebook:
-        # TODO(texto): acumular frecuencias globales y quedarse con las k mayores.
-        raise NotImplementedError("Ing. Texto: construir vocabulario top-k")
+        freq: Counter[str] = Counter()
+        for desc in descriptors:
+            freq.update(desc.vector)
+        top = freq.most_common(self.k)
+        vocab = {term: idx for idx, (term, _) in enumerate(top)}
+        return LinguisticCodebook(vocab)
