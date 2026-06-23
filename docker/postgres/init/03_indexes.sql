@@ -16,7 +16,7 @@ CREATE INDEX idx_chunks_tsv_gin ON chunks USING gin (tsv);
 
 -- ---------- IMAGEN: pgvector HNSW ----------
 CREATE INDEX idx_emb_image_hnsw
-    ON embeddings_image USING hnsw (embedding vector_l2_ops);
+    ON embeddings_image USING hnsw (embedding vector_cosine_ops);
 
 -- ---------- AUDIO: pgvector HNSW ----------
 CREATE INDEX idx_emb_audio_hnsw
