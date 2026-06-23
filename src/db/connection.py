@@ -16,7 +16,7 @@ from psycopg_pool import ConnectionPool
 def _dsn() -> str:
     return (
         f"host={os.getenv('DB_HOST', 'localhost')} "
-        f"port={os.getenv('DB_PORT', '5432')} "
+        f"port={os.getenv('DB_PORT', '5435')} "
         f"dbname={os.getenv('DB_NAME', 'multimodal')} "
         f"user={os.getenv('DB_USER', 'postgres')} "
         f"password={os.getenv('DB_PASSWORD', 'postgres')}"
@@ -46,3 +46,10 @@ def healthcheck() -> bool:
             "SELECT 1 FROM pg_extension WHERE extname = 'vector'"
         ).fetchone()
         return row is not None
+
+def close_pool() -> None:
+    """Cierra el pool de conexiones ordenadamente (llamar al terminar)."""
+    global _pool
+    if _pool is not None:
+        _pool.close()
+        _pool = None
