@@ -1,3 +1,4 @@
+"""TF-IDF / tokenización para texto.  OWNER: Ing. Texto."""
 from __future__ import annotations
 
 import re

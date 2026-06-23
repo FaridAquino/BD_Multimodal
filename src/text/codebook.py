@@ -1,3 +1,4 @@
+"""Codebook lingüístico: top-k palabras más frecuentes.  OWNER: Ing. Texto."""
 from __future__ import annotations
 
 from collections import Counter

@@ -1,3 +1,8 @@
+"""Índice invertido por BSBI (OPCIONAL, baseline comparativo).  OWNER: Ing. Texto.
+
+Solo si el equipo decide comparar SPIMI vs BSBI en la Fase 4. Si no, este archivo
+queda como NotImplementedError y no se evalúa.
+"""
 from __future__ import annotations
 
 import heapq

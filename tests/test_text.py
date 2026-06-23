@@ -7,10 +7,7 @@ from src.text.codebook import TopKCodebookBuilder
 from src.text.index.spimi import SpimiIndex
 
 
-# =============================================================================
 # Splitter
-# =============================================================================
-
 def test_split_paragraphs_basic():
     s = ParagraphSplitter()
     text = "Primer párrafo.\n\nSegundo párrafo.\n\nTercero."
@@ -53,10 +50,7 @@ def test_split_modality():
     chunks = s.split("Algo.", "doc1")
     assert chunks[0].modality == Modality.TEXT
 
-
-# =============================================================================
 # Extractor
-# =============================================================================
 
 def test_extractor_basic():
     ex = TfidfExtractor()
@@ -106,9 +100,7 @@ def test_extractor_multiple_chunks():
     assert "dog" in descs[1].vector
 
 
-# =============================================================================
 # Codebook
-# =============================================================================
 
 def _make_descriptor(tokens: list[str], source_id: str = "d1", pos: int = 0):
     chunk = Chunk(source_id=source_id, modality=Modality.TEXT, payload=" ".join(tokens), position=pos)
@@ -162,9 +154,7 @@ def test_codebook_empty_corpus():
     assert cb.size == 0
 
 
-# =============================================================================
 # SPIMI
-# =============================================================================
 
 def _make_hist(source_id: str, counts: dict[int, int], chunk_id: str | None = None):
     return Histogram(
@@ -208,7 +198,7 @@ def test_spimi_no_match():
 
 
 def test_spimi_block_flush():
-    """Forzar el volcado a disco con block_size pequeño."""
+    # Forzar el volcado a disco con block_size pequeño.
     hists = [
         _make_hist(f"d{i}", {i: 1, (i + 1) % 5: 1})
         for i in range(10)
@@ -219,9 +209,7 @@ def test_spimi_block_flush():
     assert len(index._block_paths) > 0  # debe haber generado al menos 1 bloque
 
 
-# =============================================================================
 # BSBI
-# =============================================================================
 
 def test_bsbi_basic():
     from src.text.index.bsbi import BsbiIndex
@@ -276,9 +264,7 @@ def test_bsbi_empty():
     assert idx.search(_make_hist("q", {0: 1})) == []
 
 
-# =============================================================================
 # Pipeline end-to-end
-# =============================================================================
 
 def test_text_pipeline_e2e():
     from src.core.pipeline import ModalityPipeline

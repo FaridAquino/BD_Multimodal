@@ -1,3 +1,7 @@
+"""Split de texto en párrafos.  OWNER: Ing. Texto.
+
+Implementa core.interfaces.Splitter. NO cambies la firma de split().
+"""
 from __future__ import annotations
 
 from src.core import Chunk, Modality, Splitter

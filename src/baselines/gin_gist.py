@@ -1,3 +1,9 @@
+"""Comparativa Lado B (texto): índices nativos GIN/GiST + full-text.
+OWNER: Ing. Texto (con apoyo del Tech Lead en el esquema).
+
+Debe correr sobre EL MISMO texto que alimenta a SPIMI para que la comparación
+sea válida. Mide latencia y memoria de `to_tsvector` + `@@` con índice GIN.
+"""
 from __future__ import annotations
 from collections import defaultdict
 

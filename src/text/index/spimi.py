@@ -1,3 +1,9 @@
+"""Índice invertido por SPIMI (OBLIGATORIO por enunciado).  OWNER: Ing. Texto.
+
+Single-Pass In-Memory Indexing: construye diccionario + posting lists por bloque
+en memoria, vuelca a disco al llenarse, y fusiona al final. Implementa
+core.interfaces.InvertedIndex.
+"""
 from __future__ import annotations
 
 import json
