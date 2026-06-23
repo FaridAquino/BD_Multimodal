@@ -6,7 +6,7 @@
 -- ORGANIZACIÓN:
 --   A) Tablas COMUNES (agnósticas a la modalidad): sources, chunks,
 --      codebooks, histograms.
---   B) Específicas de TEXTO: codewords_text, postings.
+--   B) Específicas de TEXTO: codewords_text
 --   C) Específicas de IMAGEN: embeddings_image.
 --   D) Específicas de AUDIO:  embeddings_audio.
 -- =====================================================================
