@@ -1,3 +1,4 @@
+"""Tests del flujo de texto: splitter, extractor, codebook, SPIMI y BSBI."""
 from __future__ import annotations
 
 from src.core import Chunk, Histogram, Modality
@@ -7,7 +8,6 @@ from src.text.codebook import TopKCodebookBuilder
 from src.text.index.spimi import SpimiIndex
 
 
-# Splitter
 def test_split_paragraphs_basic():
     s = ParagraphSplitter()
     text = "Primer párrafo.\n\nSegundo párrafo.\n\nTercero."
@@ -50,7 +50,6 @@ def test_split_modality():
     chunks = s.split("Algo.", "doc1")
     assert chunks[0].modality == Modality.TEXT
 
-# Extractor
 
 def test_extractor_basic():
     ex = TfidfExtractor()
@@ -61,7 +60,7 @@ def test_extractor_basic():
     assert len(descs) == 1
     d = descs[0]
     assert d.kind == "tokens"
-    assert "the" not in d.vector  # stopword eliminada
+    assert "the" not in d.vector
     assert "quick" in d.vector
     assert "brown" in d.vector
 
@@ -85,7 +84,7 @@ def test_extractor_short_tokens_filtered():
         Chunk(source_id="d1", modality=Modality.TEXT, payload="a an the in on at", position=0),
     ]
     descs = ex.extract(chunks)
-    assert descs[0].vector == []  # sólo stopwords cortas
+    assert descs[0].vector == []
 
 
 def test_extractor_multiple_chunks():
@@ -99,8 +98,6 @@ def test_extractor_multiple_chunks():
     assert "fox" in descs[0].vector
     assert "dog" in descs[1].vector
 
-
-# Codebook
 
 def _make_descriptor(tokens: list[str], source_id: str = "d1", pos: int = 0):
     chunk = Chunk(source_id=source_id, modality=Modality.TEXT, payload=" ".join(tokens), position=pos)
@@ -117,7 +114,7 @@ def test_codebook_builder_topk():
     builder = TopKCodebookBuilder(k=3)
     cb = builder.build(descs)
     assert cb.size == 3
-    assert "fox" in cb._vocab  # frecuencia 3
+    assert "fox" in cb._vocab
 
 
 def test_codebook_encode():
@@ -154,8 +151,6 @@ def test_codebook_empty_corpus():
     assert cb.size == 0
 
 
-# SPIMI
-
 def _make_hist(source_id: str, counts: dict[int, int], chunk_id: str | None = None):
     return Histogram(
         chunk_id=chunk_id or source_id,
@@ -172,13 +167,12 @@ def test_spimi_build_and_search():
     ]
     index = SpimiIndex(block_size=50000)
     index.build(hists)
-    assert len(index._index) == 4  # 4 términos únicos
+    assert len(index._index) == 4
     assert index._doc_count == 3
 
-    # Query similar a d1 (términos 0 y 1); d3 (solo 2,3) no matchea
     q_hist = _make_hist("q", {0: 1, 1: 1})
     results = index.search(q_hist, k=3)
-    assert len(results) == 2  # solo d1 y d2 tienen score > 0
+    assert len(results) == 2
     assert results[0].source_id in ("d1", "d2")
     assert results[1].source_id in ("d1", "d2")
 
@@ -198,18 +192,15 @@ def test_spimi_no_match():
 
 
 def test_spimi_block_flush():
-    # Forzar el volcado a disco con block_size pequeño.
     hists = [
         _make_hist(f"d{i}", {i: 1, (i + 1) % 5: 1})
         for i in range(10)
     ]
-    index = SpimiIndex(block_size=5)  # cada ~5 postings fuerza un bloque
+    index = SpimiIndex(block_size=5)
     index.build(hists)
     assert len(index._index) > 0
-    assert len(index._block_paths) > 0  # debe haber generado al menos 1 bloque
+    assert len(index._block_paths) > 0
 
-
-# BSBI
 
 def test_bsbi_basic():
     from src.text.index.bsbi import BsbiIndex
@@ -264,7 +255,71 @@ def test_bsbi_empty():
     assert idx.search(_make_hist("q", {0: 1})) == []
 
 
-# Pipeline end-to-end
+def test_spimi_aggregates_same_source_chunks():
+    from src.text.index.spimi import SpimiIndex
+    hists = [
+        Histogram(chunk_id="", source_id="d1", counts={0: 1, 1: 1}),
+        Histogram(chunk_id="", source_id="d1", counts={0: 1, 2: 1}),
+        Histogram(chunk_id="", source_id="d2", counts={0: 1}),
+    ]
+    idx = SpimiIndex()
+    idx.build(hists)
+    postings_0 = sorted(idx._index[0])
+    assert postings_0 == [("d1", 2), ("d2", 1)]
+
+
+def test_spimi_bsbi_equivalent_multichunk():
+    from src.text.index.spimi import SpimiIndex
+    from src.text.index.bsbi import BsbiIndex
+    hists = [
+        Histogram(chunk_id="", source_id="d1", counts={0: 1, 1: 1}),
+        Histogram(chunk_id="", source_id="d1", counts={0: 1, 2: 1}),
+        Histogram(chunk_id="", source_id="d2", counts={0: 1, 3: 1}),
+    ]
+    spimi = SpimiIndex()
+    bsbi = BsbiIndex()
+    spimi.build(hists)
+    bsbi.build(hists)
+    q = Histogram(chunk_id="", source_id="q", counts={0: 1, 1: 1})
+    s = {(r.source_id, round(r.score, 6)) for r in spimi.search(q, k=5)}
+    b = {(r.source_id, round(r.score, 6)) for r in bsbi.search(q, k=5)}
+    assert s == b
+
+
+def test_spimi_save_load_roundtrip(tmp_path):
+    from src.text.index.spimi import SpimiIndex
+    hists = [
+        _make_hist("d1", {0: 2, 1: 1, 2: 1}),
+        _make_hist("d2", {0: 1, 1: 2}),
+        _make_hist("d3", {2: 1, 3: 1}),
+    ]
+    idx = SpimiIndex(block_size=50000)
+    idx.build(hists)
+    q = _make_hist("q", {0: 1, 1: 1})
+    before = [(r.source_id, round(r.score, 6)) for r in idx.search(q, k=3)]
+
+    path = tmp_path / "spimi.pkl"
+    idx.save(str(path))
+    loaded = SpimiIndex.load(str(path))
+    after = [(r.source_id, round(r.score, 6)) for r in loaded.search(q, k=3)]
+
+    assert before == after
+    assert loaded.stats()["n_chunks"] == 3
+
+
+def test_codebook_save_load_roundtrip(tmp_path):
+    from src.text.codebook import LinguisticCodebook, TopKCodebookBuilder
+    descs = [
+        _make_descriptor(["fox", "dog", "fox"]),
+        _make_descriptor(["dog", "cat"]),
+    ]
+    cb = TopKCodebookBuilder(k=10).build(descs)
+    path = tmp_path / "codebook.json"
+    cb.save(str(path))
+    loaded = LinguisticCodebook.load(str(path))
+    assert loaded._vocab == cb._vocab
+    assert loaded.size == cb.size
+
 
 def test_text_pipeline_e2e():
     from src.core.pipeline import ModalityPipeline
@@ -284,9 +339,8 @@ def test_text_pipeline_e2e():
     )
     pipeline.fit(corpus)
 
-    # Búsqueda: d1, d2, d3 contienen fox/dog; d4 no
     results = pipeline.search("fox dog", k=4)
-    assert len(results) == 3  # d4 no matchea
+    assert len(results) == 3
     assert all(r.score > 0 for r in results)
     assert "d4" not in [r.source_id for r in results]
 
