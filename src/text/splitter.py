@@ -1,15 +1,27 @@
-"""Split de texto en párrafos.  OWNER: Ing. Texto.
-
-Implementa core.interfaces.Splitter. NO cambies la firma de split().
-"""
+"""Split de texto en párrafos/estrofas."""
 from __future__ import annotations
 
+import re
+
 from src.core import Chunk, Modality, Splitter
+
+_PARA_SEP = re.compile(r"\n\s*\n")
 
 
 class ParagraphSplitter(Splitter):
     modality = Modality.TEXT
 
     def split(self, content: str, source_id: str) -> list[Chunk]:
-        # TODO(texto): dividir `content` en párrafos y devolver Chunks.
-        raise NotImplementedError("Ing. Texto: implementar split por párrafos")
+        raw = _PARA_SEP.split(content.replace("\r\n", "\n"))
+        chunks: list[Chunk] = []
+        for pos, paragraph in enumerate(raw):
+            paragraph = paragraph.strip()
+            if not paragraph:
+                continue
+            chunks.append(Chunk(
+                source_id=source_id,
+                modality=self.modality,
+                payload=paragraph,
+                position=pos,
+            ))
+        return chunks
