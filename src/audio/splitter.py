@@ -1,12 +1,8 @@
 """Split de audio en ventanas deslizantes (100-200 ms).  OWNER: Ing. Audio."""
 from __future__ import annotations
-
 import librosa
-import numpy as np
-
-
 from src.core import Chunk, Modality, Splitter
-from typing import Any
+
 
 
 class SlidingWindowSplitter(Splitter):
