@@ -137,7 +137,6 @@ def iter_histograms(codebook_id: int):
     Las claves del JSON `counts` vienen como string desde Postgres; se convierten
     a int para que coincidan con los visual_word_id del índice.
     """
-    from src.core import Histogram
     with get_conn() as conn:
         rows = conn.execute(
             "SELECT chunk_id, source_id, counts FROM histograms WHERE codebook_id = %s",
