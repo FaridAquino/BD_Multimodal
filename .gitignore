@@ -21,6 +21,7 @@ results/raw/
 .idea/
 .vscode/
 
-# Artefactos de modelos: los del demo (codebooks + índices, ~2 MB) SÍ se versionan
-# para que el proyecto sea reproducible al clonar (ver scripts/demo.sh).
-# Si entrenas modelos pesados que NO quieras versionar, ignóralos puntualmente aquí.
+# Modelos: NO se versionan. Cada quien genera los suyos en local (codebook
+# K-Means de imagen/audio e índices de las 3 modalidades) al correr ingest +
+# build_index sobre data/samples/ (ver README).
+models/
