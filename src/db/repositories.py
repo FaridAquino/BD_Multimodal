@@ -109,6 +109,21 @@ def insert_embeddings_image(rows: Iterable[tuple[int, int, str, "np.ndarray"]]) 
         conn.commit()
 
 
+def insert_embeddings_audio(rows: Iterable[tuple[int, int, str, "np.ndarray"]]) -> None:
+    """rows: iterable de (chunk_id, codebook_id, source_id, embedding_vector).
+    embedding_vector: ndarray de dimensión k (el histograma como vector denso)."""
+    with get_conn() as conn:
+        register_vector(conn)
+        with conn.cursor() as cur:
+            cur.executemany(
+                "INSERT INTO embeddings_audio (chunk_id, codebook_id, source_id, embedding) "
+                "VALUES (%s, %s, %s, %s) "
+                "ON CONFLICT (chunk_id) DO UPDATE SET embedding = EXCLUDED.embedding",
+                [(cid, cbid, sid, emb) for cid, cbid, sid, emb in rows],
+            )
+        conn.commit()
+
+
 def truncate_all() -> None:
     with get_conn() as conn:
         conn.execute(

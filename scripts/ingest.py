@@ -1,4 +1,4 @@
-"""Ingesta multimodal en PostgreSQL (imagen y texto)."""
+"""Ingesta multimodal en PostgreSQL (imagen, texto y audio)."""
 from __future__ import annotations
 
 import argparse
@@ -12,6 +12,7 @@ from src.db.connection import close_pool             # noqa: E402
 
 MODELS_DIR_IMAGE = Path("models/image")
 MODELS_DIR_TEXT = Path("models/text")
+MODELS_DIR_AUDIO = Path("models/audio")   # aquí vive el codebook K-Means y el índice
 
 
 def listar_imagenes(carpeta: Path) -> list[Path]:
@@ -189,9 +190,85 @@ def ingestar_texto(args) -> None:
     print(f"Pasada 2: insertados {insertados} chunks (+ histogramas + tsv).")
 
 
+def ingestar_audio(args) -> None:
+    import os
+    import time
+
+    from src.audio.splitter import SlidingWindowSplitter
+    from src.audio.extractor import MfccExtractor
+    from src.audio.codebook import KMeansAcousticBuilder
+
+    if not os.path.exists(args.model):
+        print(f"[ERROR] No se encontró el modelo {args.model}. Corre train_kmeans primero.")
+        return
+
+    # 1. Codebook universal (joblib, entrenado por train_kmeans) + registro en BD.
+    builder = KMeansAcousticBuilder()
+    codebook = builder.load_from_file(args.model)
+    k = codebook.size
+
+    if args.truncate:
+        repo.truncate_all()
+        print("Tablas vaciadas (truncate).")
+
+    codebook_id = repo.register_codebook(
+        modality="audio", k=k,
+        params={"window_ms": args.window_ms, "hop_ms": args.hop_ms, "n_mfcc": 20,
+                "centroids_path": args.model},
+    )
+    print(f"Codebook registrado (id={codebook_id}, {k} acoustic words).")
+
+    splitter = SlidingWindowSplitter(window_ms=args.window_ms, hop_ms=args.hop_ms)
+    extractor = MfccExtractor()
+
+    mp3_files = sorted(Path(args.audio).rglob("*.mp3"))[: args.limit]
+    total = len(mp3_files)
+    print(f"Canciones a ingestar: {total}\n")
+
+    exitos, errores, total_chunks = 0, 0, 0
+    start = time.time()
+
+    for i, file_path in enumerate(mp3_files, 1):
+        track_id = file_path.stem
+        source_id = f"fma_track_{track_id}"
+        print(f"[{i}/{total}] {track_id}...", end=" ", flush=True)
+        try:
+            chunks = splitter.split(str(file_path), source_id)
+            if not chunks:
+                raise ValueError("audio muy corto o vacío (0 chunks)")
+
+            repo.insert_source(source_id, "audio", str(file_path),
+                               metadata={"fma_id": track_id})
+            chunk_ids = repo.insert_chunks(chunks)        # ids en el mismo orden
+            descs = extractor.extract(chunks)
+
+            hist_rows, emb_rows = [], []
+            for chunk_id, d in zip(chunk_ids, descs):
+                h = codebook.encode(d)
+                hist_rows.append((chunk_id, codebook_id, source_id, h.counts))
+                vec = counts_a_vector(h.counts, k)
+                emb_rows.append((chunk_id, codebook_id, source_id, vec))
+
+            repo.insert_histograms(hist_rows)
+            repo.insert_embeddings_audio(emb_rows)
+            total_chunks += len(chunk_ids)
+            exitos += 1
+            print("OK")
+        except Exception as e:  # noqa: BLE001 — el bucle continúa con la siguiente
+            errores += 1
+            print(f"ERROR: {e}")
+
+    elapsed = (time.time() - start) / 60
+    print("\n=== REPORTE DE INGESTA (audio) ===")
+    print(f"Tiempo total          : {elapsed:.2f} min")
+    print(f"Canciones con éxito   : {exitos}")
+    print(f"Canciones con error   : {errores}")
+    print(f"Chunks insertados     : {total_chunks}")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="Ingesta multimodal en Postgres")
-    p.add_argument("--modality", choices=["image", "text"], default="image")
+    p.add_argument("--modality", choices=["image", "text", "audio"], default="image")
     p.add_argument("--k", type=int, default=None)
     p.add_argument("--truncate", action="store_true")
     p.add_argument("--images", default="data/raw/fashion-dataset/images")
@@ -202,16 +279,26 @@ def main() -> None:
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--csv", default="data/raw/spotify_millsongdata.csv")
     p.add_argument("--max-chunks", type=int, default=1000)
+    p.add_argument("--audio", default="data/raw/fma_small",
+                   help="Carpeta con los MP3 (modalidad audio)")
+    p.add_argument("--model", default=str(MODELS_DIR_AUDIO / "kmeans_256_fma.joblib"),
+                   help="Codebook de audio entrenado (joblib)")
+    p.add_argument("--window-ms", type=int, default=150,
+                   help="Ancho de la ventana de audio en ms (modalidad audio)")
+    p.add_argument("--hop-ms", type=int, default=750,
+                   help="Salto entre ventanas en ms; mayor = menos chunks (modalidad audio)")
     args = p.parse_args()
 
     if args.k is None:
-        args.k = 256 if args.modality == "image" else 5000
+        args.k = 256 if args.modality in ("image", "audio") else 5000
 
     try:
         if args.modality == "image":
             ingestar_imagen(args)
-        else:
+        elif args.modality == "text":
             ingestar_texto(args)
+        else:
+            ingestar_audio(args)
     finally:
         close_pool()
 
