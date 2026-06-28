@@ -11,11 +11,17 @@ from src.db.connection import get_conn
 
 
 def search_vector(modality: str, query_vec, k: int = 10) -> list[SearchResult]:
-    # Convertimos el diccionario sparse a un vector denso de 512 elementos
-    dense_vector = [0.0] * 512
+    # 1. Definir la dimensión correcta según la modalidad
+    if modality == "audio":
+        dim = 256
+    else:
+        dim = 512
+
+    # 2. Convertimos el diccionario sparse a un vector denso usando la variable 'dim'
+    dense_vector = [0.0] * dim
     for cw, count in query_vec.counts.items():
         idx = int(cw)
-        if 0 <= idx < 512:
+        if 0 <= idx < dim:  # <--- Cambiamos el 512 por dim aquí también
             dense_vector[idx] = float(count)
 
     # Conectamos a la BD usando el patrón del repositorio

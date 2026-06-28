@@ -90,14 +90,30 @@ def _aggregate_by_source(results) -> list[tuple[str, float]]:
         acc[r.source_id] = max(acc[r.source_id], r.score)
     return sorted(acc.items(), key=lambda x: x[1], reverse=True)
 
+def _clean_source_id(raw_sid: str) -> str:
+    """Normaliza un source_id que puede venir con sufijos de chunk/patch o extensión de archivo."""
+    sid = str(raw_sid).strip()
+    # Eliminar sufijos de troceado: "10000_chunk_3" → "10000"
+    for suffix in ("_chunk", "_patch", "_segment"):
+        if suffix in sid:
+            sid = sid.split(suffix)[0]
+    # Eliminar extensiones de audio que puedan estar embebidas en el ID
+    for ext in (".wav", ".mp3", ".ogg", ".flac", ".m4a"):
+        if sid.endswith(ext):
+            sid = sid[: -len(ext)]
+    return sid
+
+
 def _enrich(ranked: list[tuple[str, float]]) -> list[dict]:
-    meta = repo.get_sources_metadata([str(sid) for sid, _ in ranked])
+    # Normalizamos todos los IDs antes de consultar la BD
+    cleaned: list[tuple[str, float]] = [(_clean_source_id(sid), score) for sid, score in ranked]
+
+    meta = repo.get_sources_metadata([sid for sid, _ in cleaned])
     out = []
-    for sid, score in ranked:
-        sid_str = str(sid)
-        m = meta.get(sid_str, {})
+    for sid, score in cleaned:
+        m = meta.get(sid, {})
         out.append({
-            "source_id": sid_str,
+            "source_id": sid,
             "artist": m.get("artist", "Desconocido"),
             "song": m.get("song", "Desconocida"),
             "score": round(float(score), 6),
