@@ -55,15 +55,20 @@ def _aggregate_by_source(results) -> list[tuple[str, float]]:
 
 
 def _enrich(ranked: list[tuple[str, float]]) -> list[dict]:
-    meta = repo.get_sources_metadata([sid for sid, _ in ranked])
+    # Extraemos la metadata de la BD (con IDs casteados a string para mayor seguridad)
+    sids = [str(sid) for sid, _ in ranked]
+    meta = repo.get_sources_metadata(sids)
+    
     out = []
     for sid, score in ranked:
-        m = meta.get(sid, {})
+        sid_str = str(sid)
+        m = meta.get(sid_str, {})
+        
         out.append({
-            "source_id": sid,
+            "source_id": sid_str,
             "product_name": m.get("product_name", m.get("title", "Desconocido")),
             "price": m.get("price", "N/A"),
-            "image_url": m.get("image_url", m.get("url", "")),
+            "image_url": m.get("uri", ""),  # Lectura estricta del uri devuelto por BD
             "score": round(float(score), 6),
         })
     return out
