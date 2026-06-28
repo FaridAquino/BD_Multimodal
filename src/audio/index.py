@@ -113,8 +113,11 @@ class AcousticInvertedIndex(InvertedIndex):
         return ix
 
     def stats(self) -> dict:
+        # n_chunks: unidades indexadas. El índice agrega por source_id, así que
+        # aquí cuenta canciones (no chunks crudos). Misma clave que imagen/texto
+        # para encajar en el reporte genérico de scripts/build_index.py.
         return {
-            "n_docs": len(self.doc_norms),
+            "n_chunks": len(self.doc_norms),
             "n_acoustic_words": len(self.index),
             "n_postings": sum(len(v) for v in self.index.values()),
         }
