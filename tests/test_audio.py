@@ -1,88 +1,110 @@
-"""Demo del pipeline completo de audio sobre una sola pista (smoke test manual).
+"""Tests unitarios del pipeline de audio (sin BD ni modelo en disco).
 
-Mismo patrón que scripts/ingest_fma.py: split -> chunks -> MFCC -> encode ->
-histograms (Lado A) + embeddings_audio (Lado B) -> índice invertido en memoria.
+Mismo estilo que tests/test_text.py: datos sintéticos + asserts. Cubre el
+splitter, el extractor MFCC, el codebook acústico y el índice invertido propio
+(Lado A): build / search / stats / save+load.
 """
-import os
+from __future__ import annotations
 
 import numpy as np
 
+from src.core import Chunk, Descriptor, Histogram, Modality
 from src.audio.splitter import SlidingWindowSplitter
 from src.audio.extractor import MfccExtractor
-from src.audio.codebook import KMeansAcousticBuilder
+from src.audio.codebook import AcousticCodebook
 from src.audio.index import AcousticInvertedIndex
-from src.db import repositories as repo
-from src.db.connection import close_pool
 
 
-def counts_a_vector(counts: dict, k: int) -> np.ndarray:
-    vec = np.zeros(k, dtype=np.float32)
-    for cw, freq in counts.items():
-        vec[int(cw)] = freq
-    return vec
+# ---------- Splitter ----------
+
+def test_splitter_modality_y_params():
+    s = SlidingWindowSplitter(window_ms=150, hop_ms=750)
+    assert s.modality == Modality.AUDIO
+    assert s.window_ms == 150
+    assert s.hop_ms == 750
 
 
-def main():
-    print("=== Iniciando Pipeline Completo de Audio ===")
+# ---------- Extractor MFCC ----------
 
-    file_path = "data/raw/fma_small/000/000005.mp3"
-    source_id = "test_track_000005"
-    ruta_modelo = "models/audio/kmeans_256_fma.joblib"
+def test_mfcc_extractor_dimension():
+    sr = 22050
+    n = int(0.15 * sr)                       # ventana de ~150 ms
+    t = np.linspace(0, 0.15, n, endpoint=False)
+    onda = np.sin(2 * np.pi * 440 * t).astype(np.float32)   # la 440 Hz
+    chunk = Chunk(source_id="s1", modality=Modality.AUDIO, payload=onda, position=0)
 
-    if not os.path.exists(file_path):
-        print(f"Error: No se encuentra el archivo {file_path}")
-        return
-    if not os.path.exists(ruta_modelo):
-        print(f"ERROR: No se encontró el modelo en {ruta_modelo}. Corre train_kmeans.py primero.")
-        return
-
-    # 1. Codebook universal + registro en BD.
-    builder = KMeansAcousticBuilder()
-    codebook = builder.load_from_file(ruta_modelo)
-    k = codebook.size
-    print(f"1. Codebook global cargado con {k} centroides.")
-    codebook_id = repo.register_codebook(
-        modality="audio", k=k,
-        params={"window_ms": 150, "hop_ms": 75, "n_mfcc": 20},
-    )
-
-    # 2. Split del audio.
-    splitter = SlidingWindowSplitter()
-    chunks = splitter.split(file_path, source_id)
-    print(f"2. {len(chunks)} chunks generados.")
-
-    # 3. Metadatos a BD (chunk_ids reales de Postgres).
-    repo.insert_source(source_id, "audio", file_path, metadata={"title": "Test FMA"})
-    chunk_ids = repo.insert_chunks(chunks)
-
-    # 4. Extracción + cuantización.
-    extractor = MfccExtractor()
-    descs = extractor.extract(chunks)
-
-    hist_rows, emb_rows, histograms = [], [], []
-    for chunk_id, d in zip(chunk_ids, descs):
-        h = codebook.encode(d)
-        hist_rows.append((chunk_id, codebook_id, source_id, h.counts))
-        emb_rows.append((chunk_id, codebook_id, source_id, counts_a_vector(h.counts, k)))
-        h.chunk_id = str(chunk_id)
-        histograms.append(h)
-    print(f"4. {len(histograms)} histogramas generados.")
-
-    # 5. Inserción Lado A + Lado B.
-    repo.insert_histograms(hist_rows)
-    repo.insert_embeddings_audio(emb_rows)
-    print("5. Inserción exitosa en histograms y embeddings_audio.")
-
-    # 6. Índice invertido propio (Lado A en memoria).
-    index = AcousticInvertedIndex()
-    index.build(histograms)
-    resultados = index.search(histograms[0], k=3)
-    top = resultados[0].source_id if resultados else "N/A"
-    print(f"6. Búsqueda de prueba completada. Top 1 ID: {top}")
-
-    print("\n=== Validación Exitosa: pipeline conectado ===")
-    close_pool()
+    descs = MfccExtractor().extract([chunk])
+    assert len(descs) == 1
+    d = descs[0]
+    assert d.kind == "dense"
+    assert d.vector.shape == (20,)           # n_mfcc = 20
+    assert d.chunk is chunk
 
 
-if __name__ == "__main__":
-    main()
+# ---------- Codebook acústico ----------
+
+def _descriptor(vector, source_id="s1", chunk_id="c1"):
+    chunk = Chunk(source_id=source_id, modality=Modality.AUDIO, payload=None,
+                  position=0, chunk_id=chunk_id)
+    return Descriptor(chunk=chunk, vector=np.asarray(vector, dtype=np.float32))
+
+
+def test_codebook_size():
+    centroids = np.array([[0.0, 0.0], [10.0, 10.0], [20.0, 20.0]])
+    assert AcousticCodebook(centroids).size == 3
+
+
+def test_codebook_encode_palabra_mas_cercana():
+    centroids = np.array([[0.0, 0.0], [10.0, 10.0], [20.0, 20.0]])
+    codebook = AcousticCodebook(centroids)
+
+    hist = codebook.encode(_descriptor([9.5, 10.5], source_id="songX", chunk_id="42"))
+    assert isinstance(hist, Histogram)
+    assert hist.counts == {1: 1}             # centroide 1 es el más cercano
+    assert hist.source_id == "songX"
+    assert hist.chunk_id == "42"
+
+
+# ---------- Índice invertido (Lado A) ----------
+
+def _histogramas_demo():
+    # songA: dos chunks; songB: un chunk con vocabulario distinto.
+    return [
+        Histogram(chunk_id="a1", source_id="songA", counts={1: 2, 5: 1}),
+        Histogram(chunk_id="a2", source_id="songA", counts={5: 1}),
+        Histogram(chunk_id="b1", source_id="songB", counts={9: 3, 1: 1}),
+    ]
+
+
+def test_index_build_y_stats():
+    ix = AcousticInvertedIndex()
+    ix.build(_histogramas_demo())
+    stats = ix.stats()
+    assert set(stats) == {"n_chunks", "n_acoustic_words", "n_postings"}
+    assert stats["n_chunks"] == 2            # agrega por canción: songA, songB
+    assert stats["n_acoustic_words"] == len({1, 5, 9})
+    assert stats["n_postings"] > 0
+
+
+def test_index_search_self_match():
+    ix = AcousticInvertedIndex()
+    ix.build(_histogramas_demo())
+    # Consulta con el vocabulario dominante de songA.
+    query = Histogram(chunk_id="q", source_id="query", counts={1: 2, 5: 1})
+    res = ix.search(query, k=2)
+    assert res, "la búsqueda no devolvió resultados"
+    assert res[0].source_id == "songA"       # songA debe rankear primero
+
+
+def test_index_save_load_roundtrip(tmp_path):
+    ix = AcousticInvertedIndex()
+    ix.build(_histogramas_demo())
+    p = tmp_path / "index_audio.pkl"
+    ix.save(str(p))
+
+    ix2 = AcousticInvertedIndex.load(str(p))
+    assert ix2.stats() == ix.stats()
+    query = Histogram(chunk_id="q", source_id="query", counts={1: 2, 5: 1})
+    r1 = ix.search(query, k=3)
+    r2 = ix2.search(query, k=3)
+    assert [x.source_id for x in r1] == [x.source_id for x in r2]

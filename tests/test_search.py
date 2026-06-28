@@ -1,51 +1,60 @@
-import sys
-# Aseguramos que Python pueda ver la carpeta 'src'
-sys.path.append(".")
+"""Test de integración del Lado B de audio (pgvector).
 
-from src.db.repositories import search_similar_audio, get_conn
+Comprueba la búsqueda por similitud de coseno (operador `<=>`) sobre
+embeddings_audio: tomando un embedding ya almacenado como consulta, el primer
+resultado debe estar a distancia 0 (similitud ~1.0), porque el propio vector
+está en la tabla.
 
-def test_vector_search():
-    print("=== 🔍 Probando Búsqueda por Similitud Vectorial (Lado B) ===")
-    
-    # 1. Extraemos un embedding real de la base de datos para usarlo como consulta
-    with get_conn() as conn:
-        cursor = conn.execute("SELECT chunk_id, embedding FROM embeddings_audio LIMIT 1;")
-        row = cursor.fetchone()
-        
-        if not row:
-            print("❌ No se encontraron embeddings en la base de datos. Recuerda correr el pipeline primero.")
-            return
-            
-        target_chunk_id, embedding_raw = row
-        
-        # pgvector puede devolver el vector como string '[0.1,0.2,...]' o como lista dependiendo del driver.
-        # Aquí manejamos ambos casos para evitar errores:
-        if isinstance(embedding_raw, str):
-            query_embedding = [float(x) for x in embedding_raw.strip("[]").split(",")]
-        else:
-            query_embedding = list(embedding_raw)
+Nota: NO se exige que el `source_id` del top coincida con el de la consulta.
+Los embeddings de audio son histogramas one-hot por chunk ({palabra: 1} en
+dim k), así que chunks de canciones distintas comparten vector idéntico y
+empatan a distancia 0; cuál sale primero entre los empates no es determinista.
 
-    print(f"\nSelected Chunk ID: {target_chunk_id} como 'Audio Objetivo' para la consulta.")
-    print(f"Dimensiones del vector: {len(query_embedding)}")
-    print("Enviando consulta a PostgreSQL (Operador de distancia de coseno `<=>`)...")
-    
-    # 2. Ejecutamos la función de búsqueda que escribimos en el repositorio
-    results = search_similar_audio(query_embedding, limit=5)
-    
-    # 3. Desplegamos los resultados en la pantalla
-    print("\n================ TOP 5 RESULTADOS ENCONTRADOS ================")
-    print(f"{'Chunk ID':<10} | {'Similitud del Coseno':<22} | {'Estado':<20}")
-    print("-" * 65)
-    
-    for chunk_id, similarity in results:
-        # Si el ID coincide con el que usamos de query, es un clon perfecto
-        if chunk_id == target_chunk_id:
-            status = "✨ ¡Clon Exacto! (100%)"
-        else:
-            status = "🎵 Sonido Similar"
-            
-        print(f"{chunk_id:<10} | {similarity:<22.6f} | {status}")
-    print("==============================================================")
+Requiere Postgres levantado y datos ingestados; si no, el test se SALTA
+(no falla) para no romper la suite cuando no hay infraestructura.
+"""
+from __future__ import annotations
 
-if __name__ == "__main__":
-    test_vector_search()
+import numpy as np
+import pytest
+
+try:
+    from pgvector.psycopg import register_vector
+    from src.db.connection import get_conn, close_pool
+except Exception as exc:  # pragma: no cover - entorno sin drivers
+    pytest.skip(f"dependencias de BD no disponibles: {exc}", allow_module_level=True)
+
+
+def _fetch_un_embedding(conn):
+    return conn.execute(
+        "SELECT chunk_id, source_id, embedding FROM embeddings_audio LIMIT 1"
+    ).fetchone()
+
+
+def test_busqueda_vectorial_self_match():
+    try:
+        with get_conn() as conn:
+            register_vector(conn)
+            row = _fetch_un_embedding(conn)
+            if row is None:
+                pytest.skip("embeddings_audio vacía: corre la ingesta de audio primero")
+
+            chunk_id, source_id, embedding = row
+            qvec = np.asarray(embedding, dtype=np.float32)
+
+            resultados = conn.execute(
+                "SELECT source_id, 1 - (embedding <=> %s) AS similitud "
+                "FROM embeddings_audio ORDER BY embedding <=> %s LIMIT 5",
+                (qvec, qvec),
+            ).fetchall()
+    except pytest.skip.Exception:
+        raise
+    except Exception as exc:
+        pytest.skip(f"Postgres no disponible: {exc}")
+    finally:
+        close_pool()
+
+    assert resultados, "la consulta vectorial no devolvió filas"
+    _, top_sim = resultados[0]
+    # El propio vector está en la tabla -> distancia 0 -> similitud ~1.0.
+    assert top_sim == pytest.approx(1.0, abs=1e-3)
