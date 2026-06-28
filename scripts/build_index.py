@@ -10,12 +10,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.image.index import VisualInvertedIndex     # noqa: E402
 from src.text.index.spimi import SpimiIndex          # noqa: E402
+from src.audio.index import AcousticInvertedIndex    # noqa: E402
 from src.db import repositories as repo              # noqa: E402
 from src.db.connection import close_pool             # noqa: E402
 
 _CONFIG = {
     "image": (VisualInvertedIndex, Path("models/image/index_image.pkl")),
     "text": (SpimiIndex, Path("models/text/index_text.pkl")),
+    "audio": (AcousticInvertedIndex, Path("models/audio/index_audio.pkl")),
 }
 
 
@@ -46,7 +48,8 @@ def construir(args) -> None:
 
     print("\n--- ÍNDICE CONSTRUIDO ---")
     print(f"Chunks indexados     : {stats['n_chunks']}")
-    print(f"Términos/visual words: {stats.get('n_terms', stats.get('n_visual_words'))}")
+    print("Términos/visual words: "
+          f"{stats.get('n_terms') or stats.get('n_visual_words') or stats.get('n_acoustic_words')}")
     print(f"Postings totales     : {stats['n_postings']}")
     print(f"Tiempo de build      : {t_build*1000:.1f} ms")
     print(f"Tiempo de guardado   : {t_save*1000:.1f} ms")
@@ -56,7 +59,7 @@ def construir(args) -> None:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="Construir índice invertido (Lado A)")
-    p.add_argument("--modality", choices=["image", "text"], default="image")
+    p.add_argument("--modality", choices=["image", "text", "audio"], default="image")
     p.add_argument("--codebook-id", type=int, default=None)
     args = p.parse_args()
     try:

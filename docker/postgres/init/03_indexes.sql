@@ -20,7 +20,7 @@ CREATE INDEX idx_emb_image_hnsw
 
 -- ---------- AUDIO: pgvector HNSW ----------
 CREATE INDEX idx_emb_audio_hnsw
-    ON embeddings_audio USING hnsw (embedding vector_l2_ops);
+    ON embeddings_audio USING hnsw (embedding vector_cosine_ops);
 
 -- ---------- Alternativa IVFFlat (comparar HNSW vs IVF) ----------
 -- CREATE INDEX idx_emb_image_ivf ON embeddings_image

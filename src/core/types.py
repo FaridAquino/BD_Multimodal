@@ -53,7 +53,8 @@ class Histogram:
     codewords. Es lo que se persiste y lo que compara el índice invertido."""
     chunk_id: str
     source_id: str
-    counts: dict[int, int]               # codeword_id -> frecuencia
+    counts: dict[int, int]   # codeword_id -> frecuencia
+    raw_embedding: list[float] = None
     codebook_id: int | None = None
 
 
