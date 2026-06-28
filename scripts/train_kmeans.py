@@ -1,89 +1,85 @@
+"""Entrena el codebook K-Means de audio (acoustic words) sobre MFCC.
+
+Por defecto entrena sobre las MUESTRAS del repo (data/samples/audio), para que
+cualquiera pueda generar SU propio codebook sin descargar el dataset completo:
+
+    python -m scripts.train_kmeans
+    python -m scripts.train_kmeans --audio data/raw/fma_small --sample-size 500
+
+El modelo se guarda en models/audio/kmeans_256_fma.joblib (lo usa la ingesta de
+audio).  OWNER: Ing. Audio.
+"""
+from __future__ import annotations
+
+import argparse
 import os
 import random
+
+import joblib
 import librosa
 import numpy as np
-import joblib
 from pathlib import Path
 from sklearn.cluster import MiniBatchKMeans
 
-# ==========================================
-# CONFIGURACIÓN (Ajusta estas rutas)
-# ==========================================
-# La ruta a la carpeta donde está el FMA Small extraído
-FMA_AUDIO_DIR = "data/raw/fma_small" 
 
-# Dónde quieres guardar el modelo entrenado
-MODEL_OUTPUT_PATH = "models/audio/kmeans_256_fma.joblib"
-SAMPLE_SIZE = 500       # Canciones aleatorias a usar (500 es ideal para empezar)
-K_CLUSTERS = 256        # Tu vocabulario acústico
-N_MFCC = 20             # Las dimensiones de tu Lado B
-BATCH_SIZE = 10000      # Número de vectores procesados por iteración de RAM
-
-def train_global_vocabulary():
-    print("🔍 1. Buscando archivos MP3...")
-    all_mp3_files = list(Path(FMA_AUDIO_DIR).rglob("*.mp3"))
-    
+def train_global_vocabulary(audio_dir: str, output_path: str, k: int,
+                            sample_size: int, n_mfcc: int = 20,
+                            batch_size: int = 10000) -> None:
+    print("1. Buscando archivos MP3...")
+    all_mp3_files = list(Path(audio_dir).rglob("*.mp3"))
     if not all_mp3_files:
-        print("❌ No se encontraron archivos .mp3 en la ruta especificada.")
+        print(f"[ERROR] No se encontraron .mp3 en {audio_dir}.")
         return
+    print(f"   {len(all_mp3_files)} pistas encontradas en {audio_dir}.")
 
-    print(f"🎵 Se encontraron {len(all_mp3_files)} pistas en total.")
-    
-    # Tomamos una muestra aleatoria para no quemar la computadora
-    sample_size = min(SAMPLE_SIZE, len(all_mp3_files))
-    sampled_files = random.sample(all_mp3_files, sample_size)
-    print(f"🎲 Seleccionadas {sample_size} pistas aleatorias para entrenar.")
+    n = min(sample_size, len(all_mp3_files))
+    sampled_files = random.sample(all_mp3_files, n)
+    print(f"   {n} pistas seleccionadas para entrenar.")
 
-    # Inicializamos el modelo eficiente para grandes volúmenes de datos
-    kmeans = MiniBatchKMeans(n_clusters=K_CLUSTERS, batch_size=BATCH_SIZE, random_state=42)
-    
-    # Acumulador temporal para ir procesando por lotes
+    kmeans = MiniBatchKMeans(n_clusters=k, batch_size=batch_size, random_state=42)
     features_buffer = []
     processed_count = 0
     error_count = 0
 
-    print("\n⚙️ 2. Extrayendo características y entrenando por lotes...")
-    
+    print("\n2. Extrayendo MFCC y entrenando por lotes...")
     for i, file_path in enumerate(sampled_files, 1):
         try:
-            # sr=None conserva el sample rate original, duration=30 asegura no leer de más
             y, sr = librosa.load(file_path, sr=None, duration=30.0)
-            
-            # Extraemos los MFCCs idénticos a los de tu pipeline
-            mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=N_MFCC)
-            
-            # Transponemos: (20 dimensiones, N frames) -> (N frames, 20 dimensiones)
-            mfccs = mfccs.T 
+            mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc).T
             features_buffer.append(mfccs)
             processed_count += 1
-            
-            # Cada 50 canciones, entrenamos parcialmente el modelo y vaciamos la RAM
             if len(features_buffer) >= 50:
-                X_batch = np.vstack(features_buffer)
-                kmeans.partial_fit(X_batch)
-                features_buffer = [] # Liberamos memoria
-                print(f"   -> Progreso: {i}/{sample_size} canciones procesadas...")
-                
-        except Exception as e:
-            # ¡CRÍTICO para FMA! Ignoramos los MP3s corruptos sin detener el script
+                kmeans.partial_fit(np.vstack(features_buffer))
+                features_buffer = []
+                print(f"   -> Progreso: {i}/{n} canciones...")
+        except Exception:
             error_count += 1
-            print(f"   ⚠️ Error leyendo {file_path.name} (se ignorará)")
+            print(f"   aviso: error leyendo {Path(file_path).name} (se ignora)")
 
-    # Entrenamos con lo que haya quedado en el buffer final
     if features_buffer:
-        X_batch = np.vstack(features_buffer)
-        kmeans.partial_fit(X_batch)
+        kmeans.partial_fit(np.vstack(features_buffer))
 
-    print("\n✅ 3. Entrenamiento completado.")
-    print(f"   -> Pistas exitosas: {processed_count}")
-    print(f"   -> Pistas corruptas/ignoradas: {error_count}")
-    
-    # Creamos el directorio si no existe y guardamos el modelo
-    os.makedirs(os.path.dirname(MODEL_OUTPUT_PATH), exist_ok=True)
-    joblib.dump(kmeans, MODEL_OUTPUT_PATH)
-    
-    print(f"\n💾 ¡Modelo guardado con éxito en: {MODEL_OUTPUT_PATH}!")
-    print(f"   Ahora tu pipeline puede cargar este archivo para clasificar audios universales.")
+    print("\n3. Entrenamiento completado.")
+    print(f"   Pistas exitosas: {processed_count} | corruptas/ignoradas: {error_count}")
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    joblib.dump(kmeans, output_path)
+    print(f"\nModelo guardado en: {output_path}  ({k} acoustic words)")
+
+
+def main() -> None:
+    p = argparse.ArgumentParser(description="Entrena el codebook K-Means de audio")
+    p.add_argument("--audio", default="data/samples/audio",
+                   help="Carpeta con los MP3 de entrenamiento (def: muestras del repo)")
+    p.add_argument("--output", default="models/audio/kmeans_256_fma.joblib",
+                   help="Ruta de salida del modelo joblib")
+    p.add_argument("--k", type=int, default=256, help="Nº de clusters (acoustic words)")
+    p.add_argument("--sample-size", type=int, default=500,
+                   help="Máx. de pistas a usar (se acota al total disponible)")
+    p.add_argument("--n-mfcc", type=int, default=20)
+    args = p.parse_args()
+    train_global_vocabulary(args.audio, args.output, args.k, args.sample_size, args.n_mfcc)
+
 
 if __name__ == "__main__":
-    train_global_vocabulary()
+    main()
