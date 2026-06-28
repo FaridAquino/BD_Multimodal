@@ -1,17 +1,4 @@
-"""Ingesta de imágenes en PostgreSQL.  OWNER: Ing. Backend + Tech Lead.
-
-Pipeline completo para la modalidad IMAGEN:
-  Pasada 1: listar imágenes (orden determinista) -> split -> SIFT -> recolectar
-            descriptores.
-  Entrenar: K-Means sobre los descriptores -> codebook (visual words) -> guardar
-            en models/ y registrar en la tabla `codebooks`.
-  Pasada 2: por cada patch -> encode (histograma) -> INSERT en chunks, histograms
-            y embeddings_image.
-
-Uso (Postgres levantado, .venv activado, desde la raíz):
-    python -m scripts.ingest --limit 5            # prueba con 5 imágenes
-    python -m scripts.ingest --limit 112 --truncate   # ~1K chunks, limpia antes
-"""
+"""Ingesta multimodal en PostgreSQL (imagen y texto)."""
 from __future__ import annotations
 
 import argparse
@@ -20,34 +7,32 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import cv2  # noqa: E402
-import numpy as np  # noqa: E402
-
-from src.image.splitter import PatchSplitter        # noqa: E402
-from src.image.extractor import SiftExtractor        # noqa: E402
-from src.image.codebook import KMeansVisualBuilder   # noqa: E402
 from src.db import repositories as repo              # noqa: E402
 from src.db.connection import close_pool             # noqa: E402
 
-MODELS_DIR = Path("models/image")
+MODELS_DIR_IMAGE = Path("models/image")
+MODELS_DIR_TEXT = Path("models/text")
 
 
 def listar_imagenes(carpeta: Path) -> list[Path]:
     exts = {".jpg", ".jpeg", ".png"}
-    # Orden DETERMINISTA por nombre -> cargas anidadas y reproducibles.
     return sorted(p for p in carpeta.rglob("*") if p.suffix.lower() in exts)
 
 
-def counts_a_vector(counts: dict[int, int], k: int) -> np.ndarray:
-    """Convierte el histograma disperso {visual_word: freq} en vector denso de
-    tamaño k (Lado B / pgvector). Rellena con 0 las visual words ausentes."""
+def counts_a_vector(counts: dict[int, int], k: int):
+    import numpy as np
     vec = np.zeros(k, dtype=np.float32)
     for cw, freq in counts.items():
         vec[int(cw)] = freq
     return vec
 
 
-def ingestar(args) -> None:
+def ingestar_imagen(args) -> None:
+    import cv2
+    from src.image.splitter import PatchSplitter
+    from src.image.extractor import SiftExtractor
+    from src.image.codebook import KMeansVisualBuilder
+
     rutas = listar_imagenes(Path(args.images))[: args.limit]
     if not rutas:
         print(f"[ERROR] No se encontraron imágenes en: {args.images}")
@@ -61,8 +46,7 @@ def ingestar(args) -> None:
     splitter = PatchSplitter(rows=args.rows, cols=args.cols)
     extractor = SiftExtractor()
 
-    # ---------- PASADA 1: recolectar descriptores ----------
-    por_imagen = []          # [(source_id, uri, chunks, descriptors)]
+    por_imagen = []
     todos_descriptores = []
     for ruta in rutas:
         img = cv2.imread(str(ruta))
@@ -78,12 +62,11 @@ def ingestar(args) -> None:
     total_sift = sum(d.vector.shape[0] for d in todos_descriptores if d.vector.size)
     print(f"Pasada 1: {len(por_imagen)} imágenes, {total_sift} descriptores SIFT.")
 
-    # ---------- ENTRENAR CODEBOOK ----------
     builder = KMeansVisualBuilder(k=args.k, sample=args.sample,
                                   use_minibatch=True, seed=args.seed)
     codebook = builder.build(todos_descriptores)
-    MODELS_DIR.mkdir(parents=True, exist_ok=True)
-    cb_path = MODELS_DIR / "codebook_image.npy"
+    MODELS_DIR_IMAGE.mkdir(parents=True, exist_ok=True)
+    cb_path = MODELS_DIR_IMAGE / "codebook_image.npy"
     codebook.save(str(cb_path))
     codebook_id = repo.register_codebook(
         modality="image", k=args.k,
@@ -93,11 +76,10 @@ def ingestar(args) -> None:
     print(f"Codebook entrenado (id={codebook_id}, {codebook.size} visual words) "
           f"-> {cb_path}")
 
-    # ---------- PASADA 2: encode + insertar ----------
     total_chunks = 0
     for source_id, uri, chunks, descs in por_imagen:
         repo.insert_source(source_id, "image", uri, metadata={})
-        chunk_ids = repo.insert_chunks(chunks)        # ids en el mismo orden
+        chunk_ids = repo.insert_chunks(chunks)
 
         hist_rows, emb_rows = [], []
         for chunk_id, d in zip(chunk_ids, descs):
@@ -111,29 +93,126 @@ def ingestar(args) -> None:
         total_chunks += len(chunk_ids)
 
     print(f"Pasada 2: insertados {total_chunks} chunks (+ histogramas + embeddings).")
-    print("\nIngesta completada. Verifica en psql:")
-    print('  SELECT count(*) FROM chunks;')
-    print('  SELECT count(*) FROM embeddings_image;')
+
+
+def leer_canciones(csv_path: Path):
+    import csv
+    csv.field_size_limit(10_000_000)
+    with open(csv_path, encoding="utf-8", newline="") as f:
+        for i, row in enumerate(csv.DictReader(f)):
+            yield (f"song_{i}", row["artist"], row["song"], row["link"], row["text"])
+
+
+def ingestar_texto(args) -> None:
+    import math
+    from collections import Counter
+    from src.text.splitter import ParagraphSplitter
+    from src.text.extractor import TfidfExtractor
+    from src.text.codebook import TopKCodebookBuilder
+
+    csv_path = Path(args.csv)
+    if not csv_path.exists():
+        print(f"[ERROR] No se encontró el CSV: {csv_path}")
+        return
+
+    if args.truncate:
+        repo.truncate_all()
+        print("Tablas vaciadas (truncate).")
+
+    splitter = ParagraphSplitter()
+    extractor = TfidfExtractor()
+
+    por_cancion = []
+    todos_descriptores = []
+    total_chunks = 0
+    for source_id, artist, song, link, text in leer_canciones(csv_path):
+        chunks = splitter.split(text, source_id=source_id)
+        if not chunks:
+            continue
+        restante = args.max_chunks - total_chunks
+        if restante <= 0:
+            break
+        if len(chunks) > restante:
+            chunks = chunks[:restante]
+        descs = extractor.extract(chunks)
+        metadata = {"artist": artist, "song": song, "link": link}
+        por_cancion.append((source_id, metadata, link, chunks, descs))
+        todos_descriptores.extend(descs)
+        total_chunks += len(chunks)
+
+    if total_chunks == 0:
+        print("[ERROR] No se generó ningún chunk. ¿CSV vacío o sin texto?")
+        return
+    print(f"Pasada 1: {len(por_cancion)} canciones, {total_chunks} chunks (estrofas).")
+
+    builder = TopKCodebookBuilder(k=args.k)
+    codebook = builder.build(todos_descriptores)
+    MODELS_DIR_TEXT.mkdir(parents=True, exist_ok=True)
+    cb_path = MODELS_DIR_TEXT / "codebook_text.json"
+    codebook.save(str(cb_path))
+    codebook_id = repo.register_codebook(
+        modality="text", k=args.k,
+        params={"language": "english", "stemmer": "porter", "vocab_path": str(cb_path)},
+    )
+    print(f"Codebook entrenado (id={codebook_id}, {codebook.size} términos) -> {cb_path}")
+
+    encoded = []
+    doc_freq: Counter[int] = Counter()
+    n_docs = 0
+    for _, _, _, _, descs in por_cancion:
+        hs = [codebook.encode(d).counts for d in descs]
+        encoded.append(hs)
+        for counts in hs:
+            n_docs += 1
+            for term_id in counts:
+                doc_freq[term_id] += 1
+
+    cw_rows = []
+    for term, cid in codebook._vocab.items():
+        df = doc_freq.get(cid, 0)
+        idf = math.log(n_docs / df) if df > 0 else 0.0
+        cw_rows.append((cid, term, idf, df))
+    repo.insert_codewords_text(codebook_id, cw_rows)
+    print(f"codewords_text: {len(cw_rows)} términos con IDF (N={n_docs}).")
+
+    insertados = 0
+    for (source_id, metadata, link, chunks, descs), hs in zip(por_cancion, encoded):
+        repo.insert_source(source_id, "text", uri=link, metadata=metadata)
+        chunk_ids = repo.insert_chunks(chunks)
+        hist_rows = [
+            (chunk_id, codebook_id, source_id, counts)
+            for chunk_id, counts in zip(chunk_ids, hs)
+        ]
+        repo.insert_histograms(hist_rows)
+        insertados += len(chunk_ids)
+
+    print(f"Pasada 2: insertados {insertados} chunks (+ histogramas + tsv).")
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="Ingesta de imágenes en Postgres")
+    p = argparse.ArgumentParser(description="Ingesta multimodal en Postgres")
+    p.add_argument("--modality", choices=["image", "text"], default="image")
+    p.add_argument("--k", type=int, default=None)
+    p.add_argument("--truncate", action="store_true")
     p.add_argument("--images", default="data/raw/fashion-dataset/images")
-    p.add_argument("--limit", type=int, default=5, help="Nº de imágenes a procesar")
+    p.add_argument("--limit", type=int, default=5)
     p.add_argument("--rows", type=int, default=3)
     p.add_argument("--cols", type=int, default=3)
-    p.add_argument("--k", type=int, default=256, help="Tamaño del codebook")
-    p.add_argument("--sample", type=int, default=None,
-                   help="Muestra de descriptores para K-Means (None = todos)")
-    p.add_argument("--truncate", action="store_true",
-                   help="Vaciar las tablas antes de ingestar")
+    p.add_argument("--sample", type=int, default=None)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--csv", default="data/raw/spotify_millsongdata.csv")
+    p.add_argument("--max-chunks", type=int, default=1000)
     args = p.parse_args()
 
+    if args.k is None:
+        args.k = 256 if args.modality == "image" else 5000
+
     try:
-        ingestar(args)
+        if args.modality == "image":
+            ingestar_imagen(args)
+        else:
+            ingestar_texto(args)
     finally:
-        # Cierra el pool ordenadamente para evitar los avisos al salir.
         close_pool()
 
 

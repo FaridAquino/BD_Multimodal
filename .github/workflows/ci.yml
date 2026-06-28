@@ -12,8 +12,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install ruff pytest
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          pip install -r requirements.txt
+          pip install ruff pytest
+
+      - name: Descargar datos de NLTK
+        run: python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
+
       - name: Lint
         run: ruff check src tests
+
       - name: Tests
         run: pytest -q

@@ -1,17 +1,4 @@
-"""Búsqueda visual comparando LADO A (índice propio) vs LADO B (pgvector).
-OWNER: Ing. Backend.
-
-Procesa una imagen de consulta con el MISMO pipeline (split -> SIFT -> encode con
-el codebook guardado) y busca por los dos lados:
-  - Lado A: índice invertido propio cargado de models/image/index_image.pkl
-  - Lado B: pgvector (operador <=>, distancia coseno) sobre embeddings_image
-Ambos agregan los patches por imagen origen. Muestra los rankings lado a lado y
-los tiempos, que es la base de la comparación de la Fase 4.
-
-Uso (Postgres levantado, .venv activado, desde la raíz):
-    python -m scripts.probe_query --image data/raw/fashion-dataset/images/10000.jpg --top 5
-    python -m scripts.probe_query --image otra.jpg --top 5
-"""
+"""Búsqueda visual: lado A (índice propio) vs lado B (pgvector)."""
 from __future__ import annotations
 
 import argparse
@@ -43,7 +30,6 @@ def counts_a_vector(counts: dict, k: int) -> np.ndarray:
 
 
 def buscar_lado_b(descs, codebook, k, knn) -> tuple[dict, dict]:
-    """Lado B: pgvector. Devuelve (puntajes, aportes) por imagen."""
     puntajes = defaultdict(float)
     aportes = defaultdict(int)
     with get_conn() as conn:
@@ -54,7 +40,7 @@ def buscar_lado_b(descs, codebook, k, knn) -> tuple[dict, dict]:
             if qvec.sum() == 0:
                 continue
             res = conn.execute(
-                "SELECT source_id, embedding <=> %s AS dist "   
+                "SELECT source_id, embedding <=> %s AS dist "
                 "FROM embeddings_image ORDER BY dist LIMIT %s",
                 (qvec, knn),
             ).fetchall()
@@ -65,17 +51,15 @@ def buscar_lado_b(descs, codebook, k, knn) -> tuple[dict, dict]:
 
 
 def buscar_lado_a(descs, codebook, index, knn) -> tuple[dict, dict]:
-    """Lado A: índice invertido propio. Devuelve (puntajes, aportes) por imagen."""
     puntajes = defaultdict(float)
     aportes = defaultdict(int)
     for d in descs:
         h = codebook.encode(d)
         if not h.counts:
             continue
-        # El índice usa coseno: mayor score = más parecido.
         resultados = index.search(h, k=knn)
         for r in resultados:
-            puntajes[r.source_id] += r.score      # ya es similitud (coseno)
+            puntajes[r.source_id] += r.score
             aportes[r.source_id] += 1
     return puntajes, aportes
 
@@ -97,7 +81,6 @@ def buscar(args) -> None:
         return
     consulta_id = Path(args.image).stem
 
-    # Recuperar metadata del codebook (k, rejilla).
     with get_conn() as conn:
         row = conn.execute(
             "SELECT id, k, params FROM codebooks WHERE modality='image' "
@@ -111,7 +94,6 @@ def buscar(args) -> None:
     cols_g = params.get("cols", args.cols)
     print(f"Consulta: {consulta_id} | k={k} | rejilla={rows_g}x{cols_g}")
 
-    # Cargar codebook (.npy) e índice propio (.pkl).
     codebook = VisualCodebook.from_file(str(MODELS_DIR / "codebook_image.npy"))
     index_path = MODELS_DIR / "index_image.pkl"
     if not index_path.exists():
@@ -119,18 +101,15 @@ def buscar(args) -> None:
         return
     index = VisualInvertedIndex.load(str(index_path))
 
-    # Procesar la consulta UNA vez (mismo pipeline para ambos lados).
     splitter = PatchSplitter(rows=rows_g, cols=cols_g)
     extractor = SiftExtractor()
     chunks = splitter.split(img, source_id="__query__")
     descs = extractor.extract(chunks)
 
-    # LADO A (índice propio).
     t0 = time.perf_counter()
     pa, aa = buscar_lado_a(descs, codebook, index, args.knn)
     t_a = time.perf_counter() - t0
 
-    # LADO B (pgvector).
     t0 = time.perf_counter()
     pb, ab = buscar_lado_b(descs, codebook, k, args.knn)
     t_b = time.perf_counter() - t0
@@ -138,7 +117,6 @@ def buscar(args) -> None:
     top_a = imprimir_ranking("LADO A — índice invertido propio", pa, aa, args.top, consulta_id)
     top_b = imprimir_ranking("LADO B — pgvector (HNSW)", pb, ab, args.top, consulta_id)
 
-    # Comparación.
     print("\n--- COMPARACIÓN ---")
     print(f"Tiempo Lado A (índice propio) : {t_a*1000:.1f} ms")
     print(f"Tiempo Lado B (pgvector)      : {t_b*1000:.1f} ms")
@@ -149,10 +127,9 @@ def buscar(args) -> None:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="Búsqueda visual: Lado A vs Lado B")
-    p.add_argument("--image", required=True, help="Ruta de la imagen de consulta")
+    p.add_argument("--image", required=True)
     p.add_argument("--top", type=int, default=10)
-    p.add_argument("--knn", type=int, default=10,
-                   help="Vecinos por patch a recuperar de cada lado")
+    p.add_argument("--knn", type=int, default=10)
     p.add_argument("--rows", type=int, default=3)
     p.add_argument("--cols", type=int, default=3)
     args = p.parse_args()

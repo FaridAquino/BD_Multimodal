@@ -1,12 +1,4 @@
-"""Acceso a datos: inserción en las tablas de Postgres.  OWNER: Tech Lead.
-
-Capa que sabe CÓMO escribir en cada tabla. El ingest.py decide QUÉ insertar y
-llama a estas funciones. Inserción por LOTES (execute_many) porque insertar
-100K filas una por una sería lentísimo.
-
-Comparte tablas entre modalidades; las específicas (embeddings_image/audio) tienen
-su propia función por la dimensión distinta del vector.
-"""
+"""Acceso a datos: inserción y lectura en las tablas de Postgres."""
 from __future__ import annotations
 
 import math
@@ -22,11 +14,7 @@ from src.core import Chunk, Histogram
 from .connection import get_conn
 
 
-# ---------------------------------------------------------------------------
-# CODEBOOK
-# ---------------------------------------------------------------------------
 def register_codebook(modality: str, k: int, params: dict) -> int:
-    """Registra un codebook y devuelve su id (para enlazar histogramas/embeddings)."""
     with get_conn() as conn:
         row = conn.execute(
             "INSERT INTO codebooks (modality, k, params) VALUES (%s, %s, %s) "
@@ -37,11 +25,7 @@ def register_codebook(modality: str, k: int, params: dict) -> int:
         return row[0]
 
 
-# ---------------------------------------------------------------------------
-# SOURCES
-# ---------------------------------------------------------------------------
 def insert_source(source_id: str, modality: str, uri: str, metadata: dict) -> None:
-    """Inserta un origen (imagen/canción/doc). ON CONFLICT evita duplicados."""
     with get_conn() as conn:
         conn.execute(
             "INSERT INTO sources (id, modality, uri, metadata) "
@@ -51,35 +35,31 @@ def insert_source(source_id: str, modality: str, uri: str, metadata: dict) -> No
         conn.commit()
 
 
-# ---------------------------------------------------------------------------
-# CHUNKS  (devuelve los ids asignados, en el mismo orden)
-# ---------------------------------------------------------------------------
 def insert_chunks(chunks: Sequence[Chunk]) -> list[int]:
-    """Inserta chunks por lote y devuelve los ids generados (BIGSERIAL).
-
-    Para imagen/audio, payload y tsv quedan NULL (solo texto los usa).
-    """
     ids: list[int] = []
     with get_conn() as conn:
         with conn.cursor() as cur:
             for ch in chunks:
-                cur.execute(
-                    "INSERT INTO chunks (source_id, modality, position, payload, metadata) "
-                    "VALUES (%s, %s, %s, %s, %s) RETURNING id",
-                    (ch.source_id, ch.modality.value, ch.position,
-                     ch.payload if ch.modality.value == "text" else None,
-                     json.dumps(ch.metadata)),
-                )
+                if ch.modality.value == "text":
+                    cur.execute(
+                        "INSERT INTO chunks (source_id, modality, position, payload, tsv, metadata) "
+                        "VALUES (%s, %s, %s, %s, to_tsvector('english', %s), %s) RETURNING id",
+                        (ch.source_id, ch.modality.value, ch.position,
+                         ch.payload, ch.payload, json.dumps(ch.metadata)),
+                    )
+                else:
+                    cur.execute(
+                        "INSERT INTO chunks (source_id, modality, position, payload, metadata) "
+                        "VALUES (%s, %s, %s, %s, %s) RETURNING id",
+                        (ch.source_id, ch.modality.value, ch.position,
+                         None, json.dumps(ch.metadata)),
+                    )
                 ids.append(cur.fetchone()[0])
         conn.commit()
     return ids
 
 
-# ---------------------------------------------------------------------------
-# HISTOGRAMS  (Lado A, común a las 3 modalidades)
-# ---------------------------------------------------------------------------
 def insert_histograms(rows: Iterable[tuple[int, int, str, dict]]) -> None:
-    """rows: iterable de (chunk_id, codebook_id, source_id, counts_dict)."""
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.executemany(
@@ -91,14 +71,34 @@ def insert_histograms(rows: Iterable[tuple[int, int, str, dict]]) -> None:
         conn.commit()
 
 
-# ---------------------------------------------------------------------------
-# EMBEDDINGS_IMAGE  (Lado B, vector denso para pgvector)
-# ---------------------------------------------------------------------------
-def insert_embeddings_image(rows: Iterable[tuple[int, int, str, "np.ndarray"]]) -> None:
-    """rows: iterable de (chunk_id, codebook_id, source_id, embedding_vector).
-    embedding_vector: ndarray de dimensión k (el histograma como vector denso)."""
+def insert_codewords_text(codebook_id: int,
+                          rows: Iterable[tuple[int, str, float, int]]) -> None:
     with get_conn() as conn:
-        register_vector(conn)            # habilita el adaptador de pgvector
+        with conn.cursor() as cur:
+            cur.executemany(
+                "INSERT INTO codewords_text (codebook_id, codeword_id, term, idf, doc_freq) "
+                "VALUES (%s, %s, %s, %s, %s) "
+                "ON CONFLICT (codebook_id, codeword_id) DO UPDATE SET "
+                "term = EXCLUDED.term, idf = EXCLUDED.idf, doc_freq = EXCLUDED.doc_freq",
+                [(codebook_id, cwid, term, idf, df) for cwid, term, idf, df in rows],
+            )
+        conn.commit()
+
+
+def get_sources_metadata(source_ids: Sequence[str]) -> dict[str, dict]:
+    if not source_ids:
+        return {}
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT id, metadata FROM sources WHERE id = ANY(%s)",
+            (list(source_ids),),
+        ).fetchall()
+    return {sid: (meta or {}) for sid, meta in rows}
+
+
+def insert_embeddings_image(rows: Iterable[tuple[int, int, str, "np.ndarray"]]) -> None:
+    with get_conn() as conn:
+        register_vector(conn)
         with conn.cursor() as cur:
             cur.executemany(
                 "INSERT INTO embeddings_image (chunk_id, codebook_id, source_id, embedding) "
@@ -109,43 +109,6 @@ def insert_embeddings_image(rows: Iterable[tuple[int, int, str, "np.ndarray"]]) 
         conn.commit()
 
 
-# ---------------------------------------------------------------------------
-# EMBEDDINGS_AUDIO  (Lado B, vector denso para pgvector) — gemela de imagen
-# ---------------------------------------------------------------------------
-def insert_embeddings_audio(rows: Iterable[tuple[int, int, str, "np.ndarray"]]) -> None:
-    """rows: iterable de (chunk_id, codebook_id, source_id, embedding_vector).
-    embedding_vector: ndarray de dimensión k (el histograma como vector denso)."""
-    with get_conn() as conn:
-        register_vector(conn)            # habilita el adaptador de pgvector
-        with conn.cursor() as cur:
-            cur.executemany(
-                "INSERT INTO embeddings_audio (chunk_id, codebook_id, source_id, embedding) "
-                "VALUES (%s, %s, %s, %s) "
-                "ON CONFLICT (chunk_id) DO UPDATE SET embedding = EXCLUDED.embedding",
-                [(cid, cbid, sid, emb) for cid, cbid, sid, emb in rows],
-            )
-        conn.commit()
-
-
-def search_similar_audio(query_embedding, limit: int = 5):
-    """Búsqueda de Lado B (pgvector) sobre embeddings_audio por distancia coseno.
-
-    Devuelve una lista de tuplas (chunk_id, similitud_coseno). query_embedding
-    es un ndarray/lista de dimensión k (el histograma denso de la consulta)."""
-    qvec = np.asarray(query_embedding, dtype=np.float32)
-    with get_conn() as conn:
-        register_vector(conn)
-        rows = conn.execute(
-            "SELECT chunk_id, 1 - (embedding <=> %s) AS similarity "
-            "FROM embeddings_audio ORDER BY embedding <=> %s LIMIT %s",
-            (qvec, qvec, limit),
-        ).fetchall()
-    return rows
-
-
-# ---------------------------------------------------------------------------
-# Utilidad: limpiar todo (para reingestar desde cero sin recrear el esquema)
-# ---------------------------------------------------------------------------
 def truncate_all() -> None:
     with get_conn() as conn:
         conn.execute(
@@ -154,12 +117,8 @@ def truncate_all() -> None:
         )
         conn.commit()
 
-# ===========================================================================
-# Lee los histogramas de un codebook para construir el índice Lado A.
-# ===========================================================================
 
 def get_latest_codebook_id(modality: str) -> int | None:
-    """Devuelve el id del codebook más reciente de una modalidad (o None)."""
     with get_conn() as conn:
         row = conn.execute(
             "SELECT id FROM codebooks WHERE modality = %s ORDER BY id DESC LIMIT 1",
@@ -169,11 +128,6 @@ def get_latest_codebook_id(modality: str) -> int | None:
 
 
 def iter_histograms(codebook_id: int):
-    """Lee los histogramas de un codebook como objetos Histogram.
-
-    Las claves del JSON `counts` vienen como string desde Postgres; se convierten
-    a int para que coincidan con los visual_word_id del índice.
-    """
     with get_conn() as conn:
         rows = conn.execute(
             "SELECT chunk_id, source_id, counts FROM histograms WHERE codebook_id = %s",
