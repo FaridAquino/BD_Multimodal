@@ -21,4 +21,6 @@ results/raw/
 .idea/
 .vscode/
 
-models/
+# Artefactos de modelos: los del demo (codebooks + índices, ~2 MB) SÍ se versionan
+# para que el proyecto sea reproducible al clonar (ver scripts/demo.sh).
+# Si entrenas modelos pesados que NO quieras versionar, ignóralos puntualmente aquí.
