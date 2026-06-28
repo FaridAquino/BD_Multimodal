@@ -110,6 +110,40 @@ def insert_embeddings_image(rows: Iterable[tuple[int, int, str, "np.ndarray"]]) 
 
 
 # ---------------------------------------------------------------------------
+# EMBEDDINGS_AUDIO  (Lado B, vector denso para pgvector) — gemela de imagen
+# ---------------------------------------------------------------------------
+def insert_embeddings_audio(rows: Iterable[tuple[int, int, str, "np.ndarray"]]) -> None:
+    """rows: iterable de (chunk_id, codebook_id, source_id, embedding_vector).
+    embedding_vector: ndarray de dimensión k (el histograma como vector denso)."""
+    with get_conn() as conn:
+        register_vector(conn)            # habilita el adaptador de pgvector
+        with conn.cursor() as cur:
+            cur.executemany(
+                "INSERT INTO embeddings_audio (chunk_id, codebook_id, source_id, embedding) "
+                "VALUES (%s, %s, %s, %s) "
+                "ON CONFLICT (chunk_id) DO UPDATE SET embedding = EXCLUDED.embedding",
+                [(cid, cbid, sid, emb) for cid, cbid, sid, emb in rows],
+            )
+        conn.commit()
+
+
+def search_similar_audio(query_embedding, limit: int = 5):
+    """Búsqueda de Lado B (pgvector) sobre embeddings_audio por distancia coseno.
+
+    Devuelve una lista de tuplas (chunk_id, similitud_coseno). query_embedding
+    es un ndarray/lista de dimensión k (el histograma denso de la consulta)."""
+    qvec = np.asarray(query_embedding, dtype=np.float32)
+    with get_conn() as conn:
+        register_vector(conn)
+        rows = conn.execute(
+            "SELECT chunk_id, 1 - (embedding <=> %s) AS similarity "
+            "FROM embeddings_audio ORDER BY embedding <=> %s LIMIT %s",
+            (qvec, qvec, limit),
+        ).fetchall()
+    return rows
+
+
+# ---------------------------------------------------------------------------
 # Utilidad: limpiar todo (para reingestar desde cero sin recrear el esquema)
 # ---------------------------------------------------------------------------
 def truncate_all() -> None:

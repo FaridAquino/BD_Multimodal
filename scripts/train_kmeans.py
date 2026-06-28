@@ -13,7 +13,7 @@ from sklearn.cluster import MiniBatchKMeans
 FMA_AUDIO_DIR = "data/raw/fma_small" 
 
 # Dónde quieres guardar el modelo entrenado
-MODEL_OUTPUT_PATH = "data/models/kmeans_256_fma.joblib" 
+MODEL_OUTPUT_PATH = "models/audio/kmeans_256_fma.joblib"
 SAMPLE_SIZE = 500       # Canciones aleatorias a usar (500 es ideal para empezar)
 K_CLUSTERS = 256        # Tu vocabulario acústico
 N_MFCC = 20             # Las dimensiones de tu Lado B

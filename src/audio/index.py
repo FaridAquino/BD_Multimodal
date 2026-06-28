@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+import pickle
 
 from collections import defaultdict
 from typing import Iterable
@@ -10,8 +11,10 @@ from src.core import Histogram, InvertedIndex, SearchResult
 
 class AcousticInvertedIndex(InvertedIndex):
 
+    FORMAT_VERSION = 1
+
     def __init__(self):
-    
+
         self.index: dict[int, list[tuple[str, float]]] = defaultdict(list)
         self.idf: dict[int, float] = {}
         self.doc_norms: dict[str, float] = defaultdict(float)
@@ -83,3 +86,35 @@ class AcousticInvertedIndex(InvertedIndex):
 
         results.sort(key=lambda x: x.score, reverse=True)
         return results[:k]
+
+    def save(self, path: str) -> None:
+        data = {
+            "version": self.FORMAT_VERSION,
+            "index": dict(self.index),
+            "idf": self.idf,
+            "doc_norms": dict(self.doc_norms),
+        }
+        with open(path, "wb") as f:
+            pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    @classmethod
+    def load(cls, path: str) -> "AcousticInvertedIndex":
+        with open(path, "rb") as f:
+            data = pickle.load(f)
+        if data.get("version") != cls.FORMAT_VERSION:
+            raise ValueError(
+                f"Versión de índice incompatible: {data.get('version')} "
+                f"!= {cls.FORMAT_VERSION}. Reconstruye el índice."
+            )
+        ix = cls()
+        ix.index = defaultdict(list, data["index"])
+        ix.idf = data["idf"]
+        ix.doc_norms = defaultdict(float, data["doc_norms"])
+        return ix
+
+    def stats(self) -> dict:
+        return {
+            "n_docs": len(self.doc_norms),
+            "n_acoustic_words": len(self.index),
+            "n_postings": sum(len(v) for v in self.index.values()),
+        }

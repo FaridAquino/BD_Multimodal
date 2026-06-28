@@ -3,7 +3,7 @@ import numpy as np
 
 def inspeccionar_modelo():
     # Usa la ruta exacta que apareció en tu terminal
-    ruta_modelo = "data/models/kmeans_256_fma.joblib"
+    ruta_modelo = "models/audio/kmeans_256_fma.joblib"
     
     print(f"🔍 Abriendo el archivo: {ruta_modelo}...\n")
     
