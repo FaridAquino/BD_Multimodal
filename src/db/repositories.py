@@ -1,9 +1,6 @@
 """Acceso a datos: inserción y lectura en las tablas de Postgres."""
 from __future__ import annotations
 
-import math
-import json
-from typing import Iterable
 import json
 import numpy as np
 from typing import Iterable, Sequence
