@@ -12,18 +12,52 @@ Universidad de Ingenieria y Tecnologia (UTEC), 2026-1
 - [ChRi5-PT] -- Modulo de Audio
 - [J-D-Rosales] -- Backend y Evaluacion
 
+## 1. Descripcion del sistema y arquitectura
+
+### 1.1 El paradigma unificado multimodal
+
+El sistema implementa un motor de busqueda que opera sobre tres modalidades de
+datos (texto, imagen y audio) aplicando un mismo flujo conceptual de cuatro
+etapas. La premisa fundamental del proyecto es demostrar que contenidos de
+naturaleza radicalmente distinta pueden ser tratados con una arquitectura comun,
+donde solo cambian las estrategias de segmentacion, extraccion y codificacion
+propias de cada dominio.
+
+Las cuatro etapas del pipeline son las siguientes:
+
+1.  **Split**: el contenido se divide en unidades atomicas de procesamiento
+    denominadas chunks. En texto corresponde a parrafos, en imagen a parches
+    extraidos de una rejilla regular, y en audio a ventanas temporales
+    deslizantes.
+2.  **Extractor**: cada chunk se transforma en un vector numerico de
+    caracteristicas. El texto se representa mediante pesos TF-IDF sobre tokens
+    preprocesados; la imagen mediante descriptores locales SIFT de 128
+    dimensiones; el audio mediante coeficientes MFCC.
+3.  **Codebook**: los vectores extraidos se agrupan mediante un algoritmo de
+    clustering (K-Means en sus variantes MiniBatch) para construir un
+    diccionario finito de patrones representativos. Para texto, el codebook es
+    simplemente el conjunto de los k terminos mas frecuentes del corpus. Para
+    imagen y audio, son k palabras visuales o acusticas respectivamente.
+4.  **Indice invertido**: cada fuente se codifica como un histograma de
+    frecuencias sobre el codebook. Sobre estos histogramas se construye un
+    indice invertido propio (Lado A) que permite recuperar las fuentes mas
+    similares mediante similitud coseno o ponderacion TF-IDF.
+
+A este flujo se le denomina Lado A (implementacion propia). Como contraparte,
+el Lado B delega la logica de indizacion y busqueda a PostgreSQL, utilizando
+su busqueda de texto completo con indices GIN para la modalidad de texto y la
+extension pgvector con indices HNSW para las modalidades de imagen y audio.
+Ambos lados parten exactamente de los mismos datos y codebooks, lo que permite
+una comparacion directa de rendimiento y calidad de recuperacion.
+
+El nucleo del sistema reside en `src/core/`, que define las interfaces
+abstractas (`Splitter`, `Extractor`, `CodebookBuilder`, `InvertedIndex`) y el
+orquestador `ModalityPipeline` que coordina las cuatro etapas sin conocer la
+modalidad concreta. Cada modalidad implementa estas interfaces de forma
+independiente en los modulos `src/text/`, `src/image/` y `src/audio/`.
+
 ---
 
-## Tabla de Contenido
-
-1.  Descripcion del sistema y arquitectura
-2.  Dataset utilizado y caracteristicas
-3.  Detalles de implementacion por modulo
-4.  Resultados experimentales
-5.  Analisis de trade-offs y conclusiones
-6.  Instrucciones de instalacion y uso
-
----
 ## PARTE B: DOCUMENTACION OPERATIVA
 
 ### B.1 Puesta en marcha
