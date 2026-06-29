@@ -56,7 +56,32 @@ orquestador `ModalityPipeline` que coordina las cuatro etapas sin conocer la
 modalidad concreta. Cada modalidad implementa estas interfaces de forma
 independiente en los modulos `src/text/`, `src/image/` y `src/audio/`.
 
+### 1.2 Correspondencia entre etapas y modalidades
+
+La tabla siguiente presenta, para cada etapa del pipeline, la interfaz comun
+definida en `core` y la implementacion concreta que adopta cada modalidad.
+
+| Etapa           | Interfaz (`core`)    | Texto              | Imagen               | Audio                |
+|-----------------|----------------------|--------------------|----------------------|----------------------|
+| Split           | `Splitter`           | `ParagraphSplitter`| `PatchSplitter`      | `SlidingWindowSplitter` |
+| Extractor       | `Extractor`          | `TfidfExtractor`   | `SiftExtractor`      | `MfccExtractor`      |
+| Codebook        | `CodebookBuilder`    | `TopKCodebookBuilder` | `KMeansVisualBuilder` | `KMeansAcousticBuilder` |
+| Indice (Lado A) | `InvertedIndex`      | `SpimiIndex`       | `VisualInvertedIndex`  | `AcousticInvertedIndex` |
+| Indice (Lado B) | --                   | GIN / GiST         | pgvector (HNSW)      | pgvector (HNSW)      |
+
+Todas las modalidades comparten la misma estructura de cuatro etapas, pero
+difieren en la complejidad computacional de cada una. La extraccion SIFT para
+imagenes opera sobre descriptores de 128 dimensiones, mientras que los MFCC de
+audio se limitan a 20 coeficientes. El codebook de texto es determinista (top-k
+por frecuencia de termino), en tanto que los de imagen y audio requieren
+entrenamiento no supervisado mediante MiniBatchKMeans. En el Lado B, la
+modalidad de texto utiliza indices GIN sobre vectores de documento
+(`to_tsvector`), mientras que imagen y audio emplean la extension pgvector con
+indices HNSW para busqueda por similitud coseno.
+
 ---
+
+## PARTE B: DOCUMENTACION OPERATIVA
 
 ## PARTE B: DOCUMENTACION OPERATIVA
 
