@@ -83,9 +83,9 @@ with tab1:
                         else:
                             st.info("No se encontraron resultados similares.")
                     else:
-                        st.error(f"❌ Error en la API ({response.status_code}): {response.text}")
+                        st.error(f" Error en la API ({response.status_code}): {response.text}")
                 except Exception as e:
-                    st.error(f"🚨 Error crítico de conexión con el Backend: {e}")
+                    st.error(f"Error crítico de conexión con el Backend: {e}")
 
 with tab2:
     st.header("Buscador Musical")
@@ -110,7 +110,7 @@ with tab2:
     
     if search_music_btn:
         if search_type == "Letra (Texto)" and not query_text.strip():
-            st.warning("⚠️ Por favor, ingresa al menos una palabra para buscar.")
+            st.warning(" Por favor, ingresa al menos una palabra para buscar.")
         elif search_type == "Fragmento (Audio)" and audio_file is None:
             st.warning("⚠️ Por favor, sube un archivo de audio para buscar.")
         else:
