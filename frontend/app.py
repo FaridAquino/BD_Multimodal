@@ -10,7 +10,7 @@ st.set_page_config(page_title="Sistema Multimodal", layout="wide")
 
 st.title("Sistema Multimodal de Recuperación y Búsqueda")
 
-tab1, tab2 = st.tabs(["🛒 Buscador de Ropa", "🎵 Buscador de Letras Musicales"])
+tab1, tab2 = st.tabs(["Buscador de Ropa", "Buscador de Letras Musicales"])
 
 with tab1:
     st.header("Buscador Visual E-commerce")
