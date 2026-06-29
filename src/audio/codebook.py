@@ -33,6 +33,9 @@ class AcousticCodebook(Codebook):
             raw_embedding=descriptor.vector.tolist(),
         )
 
+    def save(self, path: str) -> None:
+        np.save(path, self._centroids)
+
 
 class KMeansAcousticBuilder(CodebookBuilder):
     def __init__(self, k: int = 256):
