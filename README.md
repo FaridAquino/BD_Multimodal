@@ -79,7 +79,53 @@ modalidad de texto utiliza indices GIN sobre vectores de documento
 (`to_tsvector`), mientras que imagen y audio emplean la extension pgvector con
 indices HNSW para busqueda por similitud coseno.
 
+### 1.3 Doble rol de PostgreSQL y flujo Lado A versus Lado B
+
+PostgreSQL desempena dos funciones diferenciadas dentro del sistema. En
+primer lugar, actua como almacen pasivo de los datos procesados: las fuentes
+originales, los chunks resultantes de la segmentacion, los codebooks
+entrenados y los histogramas de frecuencias se persisten en tablas
+relacionales. Este almacenamiento permite reconstruir el estado del sistema
+desde cero sin perder los resultados de la ingesta.
+
+En segundo lugar, y de forma simultanea, PostgreSQL opera como motor de
+busqueda activo en el Lado B. Sobre las mismas tablas que almacenan los
+datos del Lado A, se construyen indices especializados: indices GIN sobre
+vectores de documento TSVECTOR para la busqueda full-text en texto, e
+indices HNSW sobre columnas de tipo `vector(n)` para la busqueda por
+similitud coseno en imagen y audio. De esta forma, la base de datos no solo
+conserva los datos, sino que los indexa con mecanismos nativos de PostgreSQL.
+
+El flujo comparativo entre ambos lados es el siguiente:
+
+```
+                     Datos originales
+                           |
+                     Split + Extraccion
+                           |
+                     Codebook (comun)
+                          / \
+                         /   \
+                        /     \
+                       /       \
+        Lado A (propio)         Lado B (PostgreSQL nativo)
+              |                           |
+    Histogramas de frecuencias    Embeddings densos (vector(n))
+              |                           |
+    Indice invertido en Python    Indice HNSW / GIN en PostgreSQL
+              |                           |
+    Busqueda por similitud        Busqueda por operador nativo
+    coseno (manual)               (<=> para pgvector, @@ para texto)
+```
+
+Ambos lados parten de los mismos chunks y del mismo codebook entrenado. La
+diferencia reside exclusivamente en la representacion intermedia (histogramas
+discretos frente a embeddings continuos) y en el motor de indizacion y
+recuperacion (Python en memoria frente a SQL con indices nativos).
+
 ---
+
+## PARTE B: DOCUMENTACION OPERATIVA
 
 ## PARTE B: DOCUMENTACION OPERATIVA
 
