@@ -113,8 +113,7 @@ def display_music_results(results):
     st.dataframe(df[selected_columns], use_container_width=True)
 
 
-with st.tabs(["Buscador de Ropa", "Buscador de Letras Musicales"]) as tabs:
-    tab1, tab2 = tabs
+tab1, tab2 = st.tabs(["Buscador de Ropa", "Buscador de Letras Musicales"])
 
 with tab1:
     st.header("Buscador Visual E-commerce")
@@ -160,7 +159,7 @@ with tab1:
                 }
                 response = call_api("POST", "/visual/search", params=params, files=files)
                 if response is None:
-                    return
+                    st.stop()
 
                 if response.status_code == 200:
                     display_visual_results(response.json().get("results", []))
@@ -229,7 +228,7 @@ with tab2:
                     response = call_api("POST", "/music/search_audio", params=params, files=files)
 
                 if response is None:
-                    return
+                    st.stop()
 
                 if response.status_code == 200:
                     display_music_results(response.json().get("results", []))
