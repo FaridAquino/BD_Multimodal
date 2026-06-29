@@ -10,7 +10,9 @@ Motor de búsqueda unificado sobre
 
 
 ## 0. Levantar proyecto 
-
+( poner para crear el venv para windows y para mac)
+(poner el isntalar los requirements)
+(poner el comando apra levantar el streamlet)
 
 ## 1. Introducción y Resumen del Proyecto
 * Breve descripción del sistema multimodal.
