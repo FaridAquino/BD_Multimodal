@@ -11,11 +11,11 @@ from src.db.connection import get_conn
 
 
 def search_vector(modality: str, query_vec, k: int = 10) -> list[SearchResult]:
-    # 1. Definir la dimensión correcta según la modalidad
+    # 1. Definir la dimensión correcta según la modalidad (= k del codebook)
     if modality == "audio":
         dim = 256
     else:
-        dim = 512
+        dim = 256
 
     # 2. Convertimos el diccionario sparse a un vector denso usando la variable 'dim'
     dense_vector = [0.0] * dim
