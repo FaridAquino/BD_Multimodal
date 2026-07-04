@@ -37,8 +37,24 @@ _TEXT_EXTRACTOR = TfidfExtractor()
 AUDIO_MODELS_DIR = Path("models/audio")
 _AUDIO_CODEBOOK_PATH = AUDIO_MODELS_DIR / "kmeans_256_fma.joblib"  # nombre exacto del script de ingesta
 _AUDIO_INDEX_PATH = AUDIO_MODELS_DIR / "index_audio.pkl"
-_AUDIO_SPLITTER = SlidingWindowSplitter()
 _AUDIO_EXTRACTOR = MfccExtractor()
+
+
+@lru_cache(maxsize=1)
+def _audio_splitter() -> SlidingWindowSplitter:
+    """Ventaneo idéntico al de la ingesta: lee window/hop del codebook en BD.
+
+    Si el splitter de la consulta no coincide con el usado al ingestar, los
+    histogramas quedan a escalas distintas y el ranking se degrada.
+    """
+    window_ms, hop_ms = 150, 750  # defaults de scripts/ingest.py
+    try:
+        params = repo.get_latest_codebook_params("audio") or {}
+        window_ms = int(params.get("window_ms", window_ms))
+        hop_ms = int(params.get("hop_ms", hop_ms))
+    except Exception:
+        pass  # sin BD: usar defaults
+    return SlidingWindowSplitter(window_ms=window_ms, hop_ms=hop_ms)
 
 @lru_cache(maxsize=1)
 def _load_text_lado_a() -> tuple[LinguisticCodebook, SpimiIndex]:
@@ -76,7 +92,7 @@ def _encode_text_query(codebook: LinguisticCodebook, q: str) -> Histogram:
     return Histogram(chunk_id="query", source_id="query", counts=merged)
 
 def _encode_audio_query(codebook: AcousticCodebook, path: str) -> Histogram:
-    chunks = _AUDIO_SPLITTER.split(path, source_id="query")
+    chunks = _audio_splitter().split(path, source_id="query")
     descs = _AUDIO_EXTRACTOR.extract(chunks)
     merged: dict[int, int] = {}
     for d in descs:
@@ -112,10 +128,13 @@ def _enrich(ranked: list[tuple[str, float]]) -> list[dict]:
     out = []
     for sid, score in cleaned:
         m = meta.get(sid, {})
+        # Tracks FMA no tienen artist/song: usamos género y el id del track.
+        fma_id = m.get("fma_id")
         out.append({
             "source_id": sid,
-            "artist": m.get("artist", "Desconocido"),
-            "song": m.get("song", "Desconocida"),
+            "artist": m.get("artist") or m.get("genre") or "Desconocido",
+            "song": m.get("song") or (f"FMA track {fma_id}" if fma_id else "Desconocida"),
+            "genre": m.get("genre"),
             "score": round(float(score), 6),
         })
     return out

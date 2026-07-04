@@ -28,3 +28,7 @@ results/raw/
 # K-Means de imagen/audio e índices de las 3 modalidades) al correr ingest +
 # build_index sobre data/samples/ (ver README).
 models/
+
+data
+
+pruebas/

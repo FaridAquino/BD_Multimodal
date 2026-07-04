@@ -1,0 +1,16 @@
+scale,real_chunks,modality,query,run,lado_a_latencia_ms,lado_a_qps,lado_a_ram_delta_mb,lado_a_mem_pico_mb,lado_a_precision,lado_a_recall,lado_b_latencia_ms,lado_b_qps,lado_b_ram_delta_mb,lado_b_mem_pico_mb,lado_b_precision,lado_b_recall,lado_b_io_shared_hit,lado_b_io_shared_read,overlap_at_k
+10k,10000,image,data\raw\fashion-dataset\images\10016.jpg,1,2662.082,0.38,9.8789,2.3174,0.0,0.0,66.398,15.06,-2.5859,0.1319,0.0,0.0,624,0,1.0
+10k,10000,image,data\raw\fashion-dataset\images\10016.jpg,2,696.922,1.43,7.7617,2.3166,0.0,0.0,53.887,18.56,3.3711,0.1325,0.0,0.0,624,0,1.0
+10k,10000,image,data\raw\fashion-dataset\images\10016.jpg,3,678.888,1.47,1.1484,2.3157,0.0,0.0,56.622,17.66,2.9805,0.1305,0.0,0.0,624,0,1.0
+10k,10000,image,data\raw\fashion-dataset\images\10719.jpg,1,211.997,4.72,4.9258,2.2787,0.0,0.0,48.811,20.49,4.4141,0.0796,0.0,0.0,744,0,0.8
+10k,10000,image,data\raw\fashion-dataset\images\10719.jpg,2,212.831,4.7,8.3164,2.2789,0.0,0.0,48.505,20.62,4.9883,0.0777,0.0,0.0,744,0,0.8
+10k,10000,image,data\raw\fashion-dataset\images\10719.jpg,3,218.438,4.58,8.7227,2.2787,0.0,0.0,55.509,18.02,4.3477,0.0775,0.0,0.0,744,0,0.8
+10k,10000,image,data\raw\fashion-dataset\images\10155.jpg,1,280.396,3.57,10.1914,2.3069,0.1111,0.0185,48.357,20.68,5.8711,0.1005,0.1111,0.0185,481,0,0.8
+10k,10000,image,data\raw\fashion-dataset\images\10155.jpg,2,363.191,2.75,4.8398,2.3077,0.1111,0.0185,44.626,22.41,4.5898,0.1034,0.1111,0.0185,481,0,0.8
+10k,10000,image,data\raw\fashion-dataset\images\10155.jpg,3,370.258,2.7,4.2617,2.3075,0.1111,0.0185,44.742,22.35,-6.1289,0.1033,0.1111,0.0185,481,0,0.8
+10k,10000,image,data\raw\fashion-dataset\images\10587.jpg,1,719.565,1.39,1.1758,2.3257,1.0,0.0629,56.299,17.76,4.5039,0.1399,1.0,0.0629,464,0,1.0
+10k,10000,image,data\raw\fashion-dataset\images\10587.jpg,2,720.932,1.39,0.4766,2.3196,1.0,0.0629,54.109,18.48,4.0859,0.138,1.0,0.0629,464,0,1.0
+10k,10000,image,data\raw\fashion-dataset\images\10587.jpg,3,816.463,1.22,3.8281,2.3193,1.0,0.0629,56.624,17.66,-2.3164,0.1752,1.0,0.0629,464,0,1.0
+10k,10000,image,data\raw\fashion-dataset\images\10700.jpg,1,483.669,2.07,3.5391,2.3134,0.5556,0.035,41.211,24.27,0.0469,0.0929,0.5556,0.035,787,0,1.0
+10k,10000,image,data\raw\fashion-dataset\images\10700.jpg,2,463.118,2.16,1.8633,2.3135,0.5556,0.035,60.758,16.46,0.1172,0.0925,0.5556,0.035,787,0,1.0
+10k,10000,image,data\raw\fashion-dataset\images\10700.jpg,3,402.521,2.48,2.918,2.3199,0.5556,0.035,43.397,23.04,0.0078,0.0924,0.5556,0.035,787,0,1.0

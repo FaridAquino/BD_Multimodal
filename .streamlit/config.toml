@@ -1,0 +1,8 @@
+[theme]
+# Paleta de colores fríos pastel (verdes, aguas, celestes, azules, lavandas)
+base = "light"
+primaryColor = "#8FA9DC"
+backgroundColor = "#F4F9FC"
+secondaryBackgroundColor = "#E6F1F7"
+textColor = "#33415E"
+font = "sans serif"

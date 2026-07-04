@@ -22,6 +22,7 @@ librosa>=0.10            # MFCC (audio)
 # Evaluación
 matplotlib>=3.8
 pandas>=2.2
+psutil>=5.9
 
 # Dev
 pytest>=8.0

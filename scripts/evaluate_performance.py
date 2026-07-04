@@ -1,12 +1,17 @@
 """Evaluación experimental: Lado A (Índice Invertido Propio) vs Lado B (Postgres Nativo).
 
-Métricas capturadas por consulta:
+Métricas capturadas por consulta (para Lado A y Lado B):
   - latencia_ms      : tiempo de respuesta en milisegundos
   - throughput_qps   : consultas/segundo estimadas (1000 / latencia_ms)
   - ram_delta_mb     : incremento de RAM del proceso durante la búsqueda (psutil)
-  - recall_at_k      : fracción del top-k de Lado B encontrada también en Lado A
+  - mem_pico_mb      : pico de memoria Python durante la búsqueda (tracemalloc)
+  - precision        : TP / (TP+FP) = TP / k, con relevancia por etiqueta del
+                       dataset (articleType / genre_top / artist)
+  - recall           : TP / (TP+FN) = TP / total de sources relevantes en la BD
+  - overlap_at_k     : fracción del top-k de Lado B encontrada también en Lado A
   - io_shared_hit    : bloques encontrados en cache de Postgres (EXPLAIN ANALYZE BUFFERS)
   - io_shared_read   : bloques leídos del disco por Postgres
+  - real_chunks      : chunks reales de la modalidad en la BD (verifica --scale)
 
 Ejecución desde la raíz del proyecto:
   # Texto (letra de canción)
@@ -23,7 +28,8 @@ Argumentos:
   --queries    lista de consultas (strings para texto, rutas de archivo para imagen/audio)
   --n_queries  si se omite --queries, toma N muestras aleatorias de la BD
   --k          número de resultados (top-k) a recuperar
-  --scale      1k | 10k | 100k  — se usa solo como etiqueta en el CSV de salida
+  --scale      1k | 10k | 100k  — etiqueta del experimento; se verifica contra el
+               conteo real de chunks en la BD (advierte si difiere >10%)
   --output     carpeta donde guardar el CSV (se crea si no existe)
   --runs       repeticiones por consulta para promediar latencia (default: 3)
 """
@@ -42,6 +48,10 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+# Consolas Windows cp1252: no crashear por caracteres como '→' o '═'.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(errors="replace")
 
 import psutil  # noqa: E402
 
@@ -88,22 +98,77 @@ def _ram_mb() -> float:
     return _proceso_actual().memory_info().rss / 1024 / 1024
 
 
+def _io_snapshot():
+    """Contadores de I/O del proceso (syscalls de lectura); None si no hay soporte."""
+    proc = _proceso_actual()
+    return proc.io_counters() if hasattr(proc, "io_counters") else None
+
+
+def _io_delta(antes) -> tuple[int, float]:
+    """(reads, MB leídos) desde el snapshot 'antes'. (-1, -1) si no hay soporte."""
+    if antes is None:
+        return -1, -1.0
+    ahora = _proceso_actual().io_counters()
+    return (ahora.read_count - antes.read_count,
+            (ahora.read_bytes - antes.read_bytes) / 1024 / 1024)
+
+
 def _medir(fn, *args, **kwargs):
-    """Ejecuta fn(*args, **kwargs) midiendo latencia y delta de RAM."""
+    """Ejecuta fn(*args, **kwargs) midiendo latencia, RAM, pico e I/O.
+
+    - El pico (tracemalloc) se mide en una SEGUNDA ejecución para no inflar
+      la latencia de la primera (tracemalloc añade overhead considerable).
+    - io_reads/io_read_mb: syscalls y MB leídos por ESTE proceso durante la
+      búsqueda (psutil io_counters). Para el Lado A refleja disco real; para
+      el Lado B refleja la red del cliente, por eso B se mide con EXPLAIN.
+    """
+    io_antes = _io_snapshot()
     ram_antes = _ram_mb()
     t0 = time.perf_counter()
     resultado = fn(*args, **kwargs)
     latencia_ms = (time.perf_counter() - t0) * 1000
     ram_delta = _ram_mb() - ram_antes
-    return resultado, latencia_ms, ram_delta
+    io_reads, io_read_mb = _io_delta(io_antes)
+
+    tracemalloc.start()
+    try:
+        fn(*args, **kwargs)
+        pico_mb = tracemalloc.get_traced_memory()[1] / 1024 / 1024
+    finally:
+        tracemalloc.stop()
+    return resultado, latencia_ms, ram_delta, pico_mb, io_reads, io_read_mb
 
 
-def _recall_at_k(top_a: list[str], top_b: list[str]) -> float:
-    """Fracción de los resultados de Lado B presentes en Lado A (B = ground truth)."""
+def _overlap_at_k(top_a: list[str], top_b: list[str]) -> float:
+    """Fracción de los resultados de Lado B presentes también en Lado A."""
     if not top_b:
         return 0.0
     comunes = set(top_a) & set(top_b)
     return round(len(comunes) / len(top_b), 4)
+
+
+def _precision_recall(top: list[str], query_sid: str | None, query_label: str | None,
+                      labels: dict[str, str], total_por_label: dict[str, int],
+                      k: int) -> tuple[float | str, float | str]:
+    """Precision = TP/(TP+FP) y Recall = TP/(TP+FN) con relevancia por etiqueta.
+
+    TP = resultados del top-k con la misma etiqueta que la consulta
+    (excluyendo el propio source de la consulta). Relevantes totales =
+    sources con esa etiqueta en la BD menos la consulta misma.
+    Devuelve ("", "") si la consulta no tiene etiqueta conocida.
+    """
+    if not query_label:
+        return "", ""
+    recuperados = [sid for sid in top[:k] if sid != query_sid]
+    if not recuperados:
+        return 0.0, 0.0
+    tp = sum(1 for sid in recuperados if labels.get(sid) == query_label)
+    precision = round(tp / len(recuperados), 4)
+    total_rel = total_por_label.get(query_label, 0)
+    if query_sid in labels:
+        total_rel -= 1  # la consulta misma no cuenta como relevante
+    recall = round(tp / total_rel, 4) if total_rel > 0 else ""
+    return precision, recall
 
 
 def _explain_buffers(sql: str, params: tuple, conn) -> dict[str, int]:
@@ -146,8 +211,14 @@ def _agg_source(results) -> list[str]:
 
 
 def evaluar_texto(query: str, k: int) -> dict:
+    # I/O de carga del índice propio (el Lado A paga su I/O aquí, una vez;
+    # después la búsqueda es 100% en RAM).
+    index_path = TEXT_MODELS / "index_text.pkl"
+    io0 = _io_snapshot()
     codebook = LinguisticCodebook.load(str(TEXT_MODELS / "codebook_text.json"))
-    index    = SpimiIndex.load(str(TEXT_MODELS / "index_text.pkl"))
+    index    = SpimiIndex.load(str(index_path))
+    _, io_load_mb = _io_delta(io0)
+    index_mb = index_path.stat().st_size / 1024 / 1024
     qh = _encode_text(codebook, query)
 
     # ── Lado A ───────────────────────────────────────────────────────────
@@ -155,23 +226,25 @@ def evaluar_texto(query: str, k: int) -> dict:
         raw = index.search(qh, k=k * 10)
         return _agg_source(raw)[:k]
 
-    top_a, ms_a, ram_a = _medir(lado_a)
+    top_a, ms_a, ram_a, pico_a, io_reads_a, io_mb_a = _medir(lado_a)
 
     # ── Lado B (GIN) ─────────────────────────────────────────────────────
     def lado_b():
         res = gin_gist.search_fulltext_aggregated(query, k=k)
         return [r.source_id for r in res]
 
-    top_b, ms_b, ram_b = _medir(lado_b)
+    top_b, ms_b, ram_b, pico_b, _, _ = _medir(lado_b)
 
-    # ── I/O Postgres (GIN fulltext search) ───────────────────────────────
+    # ── I/O Postgres (GIN fulltext search, misma query OR que gin_gist) ──
     io_b = {"shared_hit": -1, "shared_read": -1}
     try:
         with get_conn() as conn:
             sql = (
-                "SELECT source_id, ts_rank_cd(tsv, query) AS score "
-                "FROM chunks, plainto_tsquery('english', %s) query "
-                "WHERE tsv @@ query ORDER BY score DESC LIMIT %s"
+                "SELECT source_id, ts_rank(tsv, tq.q) AS score "
+                "FROM chunks, (SELECT replace(plainto_tsquery('english', %s)::text, "
+                "'&', '|')::tsquery AS q) tq "
+                "WHERE tsv @@ tq.q AND modality = 'text' "
+                "ORDER BY score DESC LIMIT %s"
             )
             io_b = _explain_buffers(sql, (query, k), conn)
     except Exception:
@@ -182,12 +255,18 @@ def evaluar_texto(query: str, k: int) -> dict:
         "lado_a_latencia_ms": round(ms_a, 3),
         "lado_a_qps":         round(1000 / ms_a, 2) if ms_a > 0 else 0,
         "lado_a_ram_delta_mb": round(ram_a, 4),
+        "lado_a_mem_pico_mb": round(pico_a, 4),
+        "lado_a_io_reads":    io_reads_a,
+        "lado_a_io_read_mb":  round(io_mb_a, 4),
+        "lado_a_io_load_mb":  round(io_load_mb, 4),
+        "lado_a_index_mb":    round(index_mb, 4),
         "lado_b_latencia_ms": round(ms_b, 3),
         "lado_b_qps":         round(1000 / ms_b, 2) if ms_b > 0 else 0,
         "lado_b_ram_delta_mb": round(ram_b, 4),
+        "lado_b_mem_pico_mb": round(pico_b, 4),
         "lado_b_io_shared_hit":  io_b["shared_hit"],
         "lado_b_io_shared_read": io_b["shared_read"],
-        "recall_at_k":        _recall_at_k(top_a, top_b),
+        "overlap_at_k":       _overlap_at_k(top_a, top_b),
         "top_a":              top_a[:k],
         "top_b":              top_b[:k],
     }
@@ -216,8 +295,12 @@ def _counts_a_vec(counts: dict, dim: int) -> np.ndarray:
 
 
 def evaluar_imagen(img_path: str, k: int) -> dict:
+    index_path = IMAGE_MODELS / "index_image.pkl"
+    io0 = _io_snapshot()
     codebook = VisualCodebook.from_file(str(IMAGE_MODELS / "codebook_image.npy"))
-    index    = VisualInvertedIndex.load(str(IMAGE_MODELS / "index_image.pkl"))
+    index    = VisualInvertedIndex.load(str(index_path))
+    _, io_load_mb = _io_delta(io0)
+    index_mb = index_path.stat().st_size / 1024 / 1024
     descs    = _encode_image_descs(img_path)
 
     # ── Lado A ───────────────────────────────────────────────────────────
@@ -231,7 +314,7 @@ def evaluar_imagen(img_path: str, k: int) -> dict:
                 puntajes[r.source_id] += r.score
         return sorted(puntajes, key=puntajes.__getitem__, reverse=True)[:k]
 
-    top_a, ms_a, ram_a = _medir(lado_a)
+    top_a, ms_a, ram_a, pico_a, io_reads_a, io_mb_a = _medir(lado_a)
 
     # ── Lado B (pgvector) ─────────────────────────────────────────────────
     with get_conn() as conn:
@@ -258,7 +341,7 @@ def evaluar_imagen(img_path: str, k: int) -> dict:
                     puntajes[str(sid)] += 1.0 - float(dist)
         return sorted(puntajes, key=puntajes.__getitem__, reverse=True)[:k]
 
-    top_b, ms_b, ram_b = _medir(lado_b)
+    top_b, ms_b, ram_b, pico_b, _, _ = _medir(lado_b)
 
     # ── I/O Postgres ──────────────────────────────────────────────────────
     io_b = {"shared_hit": -1, "shared_read": -1}
@@ -279,12 +362,18 @@ def evaluar_imagen(img_path: str, k: int) -> dict:
         "lado_a_latencia_ms": round(ms_a, 3),
         "lado_a_qps":         round(1000 / ms_a, 2) if ms_a > 0 else 0,
         "lado_a_ram_delta_mb": round(ram_a, 4),
+        "lado_a_mem_pico_mb": round(pico_a, 4),
+        "lado_a_io_reads":    io_reads_a,
+        "lado_a_io_read_mb":  round(io_mb_a, 4),
+        "lado_a_io_load_mb":  round(io_load_mb, 4),
+        "lado_a_index_mb":    round(index_mb, 4),
         "lado_b_latencia_ms": round(ms_b, 3),
         "lado_b_qps":         round(1000 / ms_b, 2) if ms_b > 0 else 0,
         "lado_b_ram_delta_mb": round(ram_b, 4),
+        "lado_b_mem_pico_mb": round(pico_b, 4),
         "lado_b_io_shared_hit":  io_b["shared_hit"],
         "lado_b_io_shared_read": io_b["shared_read"],
-        "recall_at_k":         _recall_at_k(top_a, top_b),
+        "overlap_at_k":        _overlap_at_k(top_a, top_b),
         "top_a":               top_a[:k],
         "top_b":               top_b[:k],
     }
@@ -303,29 +392,35 @@ def evaluar_audio(audio_path: str, k: int) -> dict:
         raise RuntimeError("No hay codebook de audio en la BD. Corre el script de ingesta.")
     _, k_cb, params = row
     window_ms = params.get("window_ms", 150)
-    hop_ms    = params.get("hop_ms", 75)
+    hop_ms    = params.get("hop_ms", 750)  # mismo default que la ingesta
 
+    index_path = AUDIO_MODELS / "index_audio.pkl"
+    io0 = _io_snapshot()
     codebook = KMeansAcousticBuilder().load_from_file(
         str(AUDIO_MODELS / "kmeans_256_fma.joblib")
     )
-    index    = AcousticInvertedIndex.load(str(AUDIO_MODELS / "index_audio.pkl"))
+    index    = AcousticInvertedIndex.load(str(index_path))
+    _, io_load_mb = _io_delta(io0)
+    index_mb = index_path.stat().st_size / 1024 / 1024
     splitter = SlidingWindowSplitter(window_ms=window_ms, hop_ms=hop_ms)
     extractor = MfccExtractor()
     chunks   = splitter.split(audio_path, source_id="query")
     descs    = extractor.extract(chunks)
 
     # ── Lado A ───────────────────────────────────────────────────────────
+    # Pool de candidatos k*3 por ventana antes de agregar por canción, para
+    # que el ranking final no dependa solo de los primeros matches.
     def lado_a():
         puntajes: dict[str, float] = defaultdict(float)
         for d in descs:
             h = codebook.encode(d)
             if not h.counts:
                 continue
-            for r in index.search(h, k=k):
+            for r in index.search(h, k=k * 3):
                 puntajes[r.source_id] += r.score
         return sorted(puntajes, key=puntajes.__getitem__, reverse=True)[:k]
 
-    top_a, ms_a, ram_a = _medir(lado_a)
+    top_a, ms_a, ram_a, pico_a, io_reads_a, io_mb_a = _medir(lado_a)
 
     # ── Lado B (pgvector) ─────────────────────────────────────────────────
     def lado_b():
@@ -340,13 +435,13 @@ def evaluar_audio(audio_path: str, k: int) -> dict:
                 rows = conn.execute(
                     "SELECT source_id, embedding <=> %s AS dist "
                     "FROM embeddings_audio ORDER BY dist LIMIT %s",
-                    (qvec, k),
+                    (qvec, k * 3),
                 ).fetchall()
                 for sid, dist in rows:
                     puntajes[str(sid)] += 1.0 - float(dist)
         return sorted(puntajes, key=puntajes.__getitem__, reverse=True)[:k]
 
-    top_b, ms_b, ram_b = _medir(lado_b)
+    top_b, ms_b, ram_b, pico_b, _, _ = _medir(lado_b)
 
     # ── I/O Postgres ──────────────────────────────────────────────────────
     io_b = {"shared_hit": -1, "shared_read": -1}
@@ -367,12 +462,18 @@ def evaluar_audio(audio_path: str, k: int) -> dict:
         "lado_a_latencia_ms": round(ms_a, 3),
         "lado_a_qps":         round(1000 / ms_a, 2) if ms_a > 0 else 0,
         "lado_a_ram_delta_mb": round(ram_a, 4),
+        "lado_a_mem_pico_mb": round(pico_a, 4),
+        "lado_a_io_reads":    io_reads_a,
+        "lado_a_io_read_mb":  round(io_mb_a, 4),
+        "lado_a_io_load_mb":  round(io_load_mb, 4),
+        "lado_a_index_mb":    round(index_mb, 4),
         "lado_b_latencia_ms": round(ms_b, 3),
         "lado_b_qps":         round(1000 / ms_b, 2) if ms_b > 0 else 0,
         "lado_b_ram_delta_mb": round(ram_b, 4),
+        "lado_b_mem_pico_mb": round(pico_b, 4),
         "lado_b_io_shared_hit":  io_b["shared_hit"],
         "lado_b_io_shared_read": io_b["shared_read"],
-        "recall_at_k":         _recall_at_k(top_a, top_b),
+        "overlap_at_k":        _overlap_at_k(top_a, top_b),
         "top_a":               top_a[:k],
         "top_b":               top_b[:k],
     }
@@ -382,37 +483,46 @@ def evaluar_audio(audio_path: str, k: int) -> dict:
 # ║  HELPERS DE MUESTREO DE CONSULTAS ALEATORIAS                            ║
 # ╚══════════════════════════════════════════════════════════════════════════╝
 
-def _sample_text_queries(n: int) -> list[str]:
-    """Toma N fragmentos de texto aleatorios de la tabla chunks."""
+def _sample_text_queries(n: int) -> list[tuple[str, str]]:
+    """Toma N fragmentos de texto aleatorios -> [(payload, source_id)]."""
     with get_conn() as conn:
         rows = conn.execute(
-            "SELECT payload FROM chunks WHERE modality='text' "
+            "SELECT payload, source_id FROM chunks WHERE modality='text' "
             "AND payload IS NOT NULL ORDER BY RANDOM() LIMIT %s",
             (n,),
         ).fetchall()
-    return [r[0][:200] for r in rows if r[0]]
+    return [(r[0][:200], str(r[1])) for r in rows if r[0]]
 
 
-def _sample_image_paths(n: int) -> list[str]:
-    """Toma N rutas de imagen aleatorias de la tabla sources."""
+def _sample_image_paths(n: int) -> list[tuple[str, str]]:
+    """Toma N rutas de imagen aleatorias -> [(ruta, source_id)]."""
     with get_conn() as conn:
         rows = conn.execute(
-            "SELECT uri FROM sources WHERE modality='image' "
+            "SELECT uri, id FROM sources WHERE modality='image' "
             "ORDER BY RANDOM() LIMIT %s",
             (n,),
         ).fetchall()
-    return [r[0] for r in rows if r[0] and Path(r[0]).exists()]
+    return [(r[0], str(r[1])) for r in rows if r[0] and Path(r[0]).exists()]
 
 
-def _sample_audio_paths(n: int) -> list[str]:
-    """Toma N rutas de audio aleatorias de la tabla sources."""
+def _sample_audio_paths(n: int) -> list[tuple[str, str]]:
+    """Toma N rutas de audio aleatorias -> [(ruta, source_id)]."""
     with get_conn() as conn:
         rows = conn.execute(
-            "SELECT uri FROM sources WHERE modality='audio' "
+            "SELECT uri, id FROM sources WHERE modality='audio' "
             "ORDER BY RANDOM() LIMIT %s",
             (n,),
         ).fetchall()
-    return [r[0] for r in rows if r[0] and Path(r[0]).exists()]
+    return [(r[0], str(r[1])) for r in rows if r[0] and Path(r[0]).exists()]
+
+
+def _derivar_source_id(modality: str, query: str) -> str | None:
+    """Deriva el source_id de una consulta dada por el usuario (ruta de archivo)."""
+    if modality == "image":
+        return Path(str(query)).stem
+    if modality == "audio":
+        return f"fma_track_{Path(str(query)).stem}"
+    return None  # texto libre: sin source conocido
 
 
 # ╔══════════════════════════════════════════════════════════════════════════╗
@@ -446,22 +556,52 @@ def main() -> None:
                         help="Número de consultas aleatorias a tomar de la BD si --queries está vacío.")
     parser.add_argument("--k",         type=int, default=10, help="Top-k de resultados.")
     parser.add_argument("--scale",     default="1k", choices=["1k", "10k", "100k"],
-                        help="Etiqueta de escala del experimento (solo afecta el nombre del CSV).")
+                        help="Escala del experimento; se verifica contra el conteo real "
+                             "de chunks en la BD.")
     parser.add_argument("--output",    default="results",
                         help="Carpeta de salida para el CSV.")
     parser.add_argument("--runs",      type=int, default=3,
                         help="Repeticiones por consulta para promediar latencia.")
     args = parser.parse_args()
 
-    # ── Determinar consultas ──────────────────────────────────────────────
-    queries = args.queries
-    if not queries:
+    # ── Verificar escala real en la BD ────────────────────────────────────
+    ESCALAS = {"1k": 1000, "10k": 10000, "100k": 100000}
+    with get_conn() as conn:
+        real_chunks = conn.execute(
+            "SELECT COUNT(*) FROM chunks WHERE modality = %s", (args.modality,)
+        ).fetchone()[0]
+    esperado = ESCALAS[args.scale]
+    print(f"[INFO] Chunks de '{args.modality}' en la BD: {real_chunks} "
+          f"(escala declarada: {args.scale} = {esperado})")
+    if real_chunks == 0:
+        print("[ERROR] No hay chunks de esta modalidad en la BD. Corre la ingesta primero.")
+        sys.exit(1)
+    if abs(real_chunks - esperado) > esperado * 0.10:
+        print(f"[WARN] El conteo real ({real_chunks}) difiere >10% de la etiqueta "
+              f"--scale {args.scale} ({esperado}). ¿Ingestaste con --max-chunks {esperado}?")
+
+    # ── Ground truth por etiquetas (precision / recall) ───────────────────
+    labels = repo.get_source_labels(args.modality)
+    total_por_label: dict[str, int] = defaultdict(int)
+    for lbl in labels.values():
+        total_por_label[lbl] += 1
+    if labels:
+        print(f"[INFO] Etiquetas de relevancia: {len(labels)} sources, "
+              f"{len(total_por_label)} clases.")
+    else:
+        print("[WARN] Sin etiquetas en sources.metadata: precision/recall "
+              "quedarán vacíos (re-ingesta con la versión actual de ingest.py).")
+
+    # ── Determinar consultas: lista de (query, source_id | None) ─────────
+    if args.queries:
+        queries = [(q, _derivar_source_id(args.modality, q)) for q in args.queries]
+    else:
         print(f"[INFO] --queries vacío. Muestreando {args.n_queries} consultas de la BD...")
         queries = SAMPLERS[args.modality](args.n_queries)
         if not queries:
             print("[ERROR] No se encontraron consultas en la BD. ¿Ingestaste datos?")
             sys.exit(1)
-        print(f"[INFO] Consultas seleccionadas: {queries}")
+        print(f"[INFO] Consultas seleccionadas: {[q for q, _ in queries]}")
 
     # ── Preparar salida ───────────────────────────────────────────────────
     output_dir = Path(args.output)
@@ -470,11 +610,17 @@ def main() -> None:
     csv_path = output_dir / f"results_{args.scale}_{args.modality}_{ts}.csv"
 
     FIELDNAMES = [
-        "scale", "modality", "query", "run",
-        "lado_a_latencia_ms", "lado_a_qps", "lado_a_ram_delta_mb",
-        "lado_b_latencia_ms", "lado_b_qps", "lado_b_ram_delta_mb",
+        "scale", "real_chunks", "modality", "query", "run",
+        "lado_a_latencia_ms", "lado_a_qps",
+        "lado_a_ram_delta_mb", "lado_a_mem_pico_mb",
+        "lado_a_io_reads", "lado_a_io_read_mb",
+        "lado_a_io_load_mb", "lado_a_index_mb",
+        "lado_a_precision", "lado_a_recall",
+        "lado_b_latencia_ms", "lado_b_qps",
+        "lado_b_ram_delta_mb", "lado_b_mem_pico_mb",
+        "lado_b_precision", "lado_b_recall",
         "lado_b_io_shared_hit", "lado_b_io_shared_read",
-        "recall_at_k",
+        "overlap_at_k",
     ]
 
     evaluador = EVALUADORES[args.modality]
@@ -486,24 +632,38 @@ def main() -> None:
         writer = csv.DictWriter(fcsv, fieldnames=FIELDNAMES)
         writer.writeheader()
 
-        for q in queries:
+        for q, qsid in queries:
+            qlabel = labels.get(qsid) if qsid else None
             for run in range(1, args.runs + 1):
                 try:
                     print(f"  → [{args.modality.upper()}] run={run} | q={str(q)[:60]!r}")
                     metrics = evaluador(q, args.k)
+
+                    prec_a, rec_a = _precision_recall(
+                        metrics["top_a"], qsid, qlabel, labels, total_por_label, args.k)
+                    prec_b, rec_b = _precision_recall(
+                        metrics["top_b"], qsid, qlabel, labels, total_por_label, args.k)
+                    metrics.update({
+                        "lado_a_precision": prec_a, "lado_a_recall": rec_a,
+                        "lado_b_precision": prec_b, "lado_b_recall": rec_b,
+                    })
+
                     row = {
-                        "scale":    args.scale,
-                        "modality": args.modality,
-                        "query":    str(q)[:120],
-                        "run":      run,
+                        "scale":       args.scale,
+                        "real_chunks": real_chunks,
+                        "modality":    args.modality,
+                        "query":       str(q)[:120],
+                        "run":         run,
                         **{k: v for k, v in metrics.items()
                            if k in FIELDNAMES},
                     }
                     writer.writerow(row)
                     fcsv.flush()  # Escribir de inmediato por si se interrumpe
+                    prec_txt = (f"P@{args.k} A/B: {prec_a:.2f}/{prec_b:.2f}"
+                                if qlabel else "P@k: sin etiqueta")
                     print(f"     Lado A: {metrics['lado_a_latencia_ms']:.1f} ms | "
                           f"Lado B: {metrics['lado_b_latencia_ms']:.1f} ms | "
-                          f"Recall@{args.k}: {metrics['recall_at_k']:.2%}")
+                          f"{prec_txt} | overlap: {metrics['overlap_at_k']:.2%}")
                 except Exception as exc:
                     print(f"  [ERROR] Consulta falló: {exc}")
 
@@ -520,7 +680,7 @@ def main() -> None:
             return statistics.mean(vals) if vals else float("nan")
 
         print("\n══════════════════════ RESUMEN ══════════════════════")
-        print(f"  Escala          : {args.scale}")
+        print(f"  Escala          : {args.scale} (chunks reales: {real_chunks})")
         print(f"  Modalidad       : {args.modality}")
         print(f"  Consultas totales: {len(rows)}")
         print(f"\n  Latencia promedio  Lado A : {_avg('lado_a_latencia_ms'):.2f} ms")
@@ -529,9 +689,19 @@ def main() -> None:
         print(f"  Throughput prom.   Lado B : {_avg('lado_b_qps'):.2f} QPS")
         print(f"  RAM delta prom.    Lado A : {_avg('lado_a_ram_delta_mb'):.4f} MB")
         print(f"  RAM delta prom.    Lado B : {_avg('lado_b_ram_delta_mb'):.4f} MB")
+        print(f"  Mem pico prom.     Lado A : {_avg('lado_a_mem_pico_mb'):.4f} MB")
+        print(f"  Mem pico prom.     Lado B : {_avg('lado_b_mem_pico_mb'):.4f} MB")
+        print(f"  IO búsqueda        Lado A : {_avg('lado_a_io_read_mb'):.4f} MB "
+              f"({_avg('lado_a_io_reads'):.0f} reads) — índice ya en RAM")
+        print(f"  IO carga índice    Lado A : {_avg('lado_a_io_load_mb'):.2f} MB "
+              f"(índice: {_avg('lado_a_index_mb'):.2f} MB en disco)")
         print(f"  IO shared_hit prom Lado B : {_avg('lado_b_io_shared_hit'):.0f} bloques")
         print(f"  IO shared_read pro Lado B : {_avg('lado_b_io_shared_read'):.0f} bloques")
-        print(f"  Recall@{args.k} promedio   : {_avg('recall_at_k'):.2%}")
+        print(f"  Precision@{args.k} prom.  Lado A : {_avg('lado_a_precision'):.2%}")
+        print(f"  Precision@{args.k} prom.  Lado B : {_avg('lado_b_precision'):.2%}")
+        print(f"  Recall@{args.k} prom.     Lado A : {_avg('lado_a_recall'):.2%}")
+        print(f"  Recall@{args.k} prom.     Lado B : {_avg('lado_b_recall'):.2%}")
+        print(f"  Overlap@{args.k} promedio : {_avg('overlap_at_k'):.2%}")
         print("═════════════════════════════════════════════════════")
     except Exception:
         pass

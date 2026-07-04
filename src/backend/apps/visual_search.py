@@ -66,7 +66,12 @@ def _enrich(ranked: list[tuple[str, float]]) -> list[dict]:
         
         out.append({
             "source_id": sid_str,
-            "product_name": m.get("product_name", m.get("title", "Desconocido")),
+            # La ingesta guarda productDisplayName/articleType (styles.csv)
+            "product_name": (m.get("productDisplayName")
+                             or m.get("product_name")
+                             or m.get("title")
+                             or "Desconocido"),
+            "category": m.get("articleType", ""),
             "price": m.get("price", "N/A"),
             "image_url": m.get("uri", ""),  # Lectura estricta del uri devuelto por BD
             "score": round(float(score), 6),

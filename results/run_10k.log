@@ -1,0 +1,832 @@
+Tablas vaciadas (truncate).
+Pasada 1: 1721 canciones, 10000 chunks (estrofas).
+Codebook entrenado (id=1, 5000 términos) -> models\text\codebook_text.json
+codewords_text: 5000 términos con IDF (N=10000).
+Pasada 2: insertados 10000 chunks (+ histogramas + tsv).
+Imágenes candidatas: 1167 | rejilla 3x3 | k=256 | presupuesto de chunks: 10000
+Etiquetas de styles.csv: 44446 productos (articleType).
+Pasada 1: 189 imágenes, 1004727 descriptores SIFT para entrenamiento (93.7s).
+Codebook entrenado (id=2, 256 visual words) -> models\image\codebook_image.npy
+  [200 imgs] 1800 chunks | 11 chunks/s | ETA 12.8 min
+  [400 imgs] 3600 chunks | 11 chunks/s | ETA 10.1 min
+  [600 imgs] 5400 chunks | 11 chunks/s | ETA 7.3 min
+  [800 imgs] 7200 chunks | 10 chunks/s | ETA 4.5 min
+  [1000 imgs] 9000 chunks | 10 chunks/s | ETA 1.6 min
+
+=== REPORTE DE INGESTA (imagen) ===
+Tiempo pasada 2       : 15.91 min
+Imágenes insertadas   : 1112
+Imágenes ilegibles    : 0
+Chunks insertados     : 10000
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+Codebook registrado (id=3, 256 acoustic words).
+Géneros FMA cargados: 49598 tracks (genre_top).
+Canciones a ingestar: 8000 | presupuesto de chunks: 10000
+
+[1/8000] 000002... OK
+[2/8000] 000005... OK
+[3/8000] 000010... OK
+[4/8000] 000140... OK
+[5/8000] 000141... OK
+[6/8000] 000148... OK
+[7/8000] 000182... OK
+[8/8000] 000190... OK
+[9/8000] 000193... OK
+[10/8000] 000194... OK
+[11/8000] 000197... OK
+[12/8000] 000200... OK
+[13/8000] 000203... OK
+[14/8000] 000204... OK
+[15/8000] 000207... OK
+[16/8000] 000210... OK
+[17/8000] 000211... OK
+[18/8000] 000212... OK
+[19/8000] 000213... OK
+[20/8000] 000255... OK
+[21/8000] 000256... OK
+[22/8000] 000368... OK
+[23/8000] 000424... OK
+[24/8000] 000459... OK
+[25/8000] 000534... OK
+[26/8000] 000540... OK
+[27/8000] 000546... OK
+[28/8000] 000574... OK
+[29/8000] 000602... OK
+[30/8000] 000615... OK
+[31/8000] 000620... OK
+[32/8000] 000621... OK
+[33/8000] 000625... OK
+[34/8000] 000666... OK
+[35/8000] 000667... OK
+[36/8000] 000676... OK
+[37/8000] 000690... OK
+[38/8000] 000694... OK
+[39/8000] 000695... OK
+[40/8000] 000704... OK
+[41/8000] 000705... OK
+[42/8000] 000706... OK
+[43/8000] 000707... OK
+[44/8000] 000708... OK
+[45/8000] 000709... OK
+[46/8000] 000714... OK
+[47/8000] 000715... OK
+[48/8000] 000716... OK
+[49/8000] 000718... OK
+[50/8000] 000777... OK
+[51/8000] 000814... OK
+[52/8000] 000821... OK
+[53/8000] 000822... OK
+[54/8000] 000825... OK
+[55/8000] 000853... OK
+[56/8000] 000890... OK
+[57/8000] 000892... OK
+[58/8000] 000897... OK
+[59/8000] 000993... OK
+[60/8000] 000995... OK
+[61/8000] 000997... OK
+[62/8000] 000998... OK
+[63/8000] 001039... OK
+[64/8000] 001040... OK
+[65/8000] 001066... OK
+[66/8000] 001069... OK
+[67/8000] 001073... OK
+[68/8000] 001075... OK
+[69/8000] 001082... OK
+[70/8000] 001083... OK
+[71/8000] 001087... OK
+[72/8000] 001102... OK
+[73/8000] 001193... OK
+[74/8000] 001195... OK
+[75/8000] 001196... OK
+[76/8000] 001197... OK
+[77/8000] 001249... OK
+[78/8000] 001259... OK
+[79/8000] 001270... OK
+[80/8000] 001276... OK
+[81/8000] 001277... OK
+[82/8000] 001278... OK
+[83/8000] 001417... OK
+[84/8000] 001427... OK
+[85/8000] 001443... OK
+[86/8000] 001482... OK
+[87/8000] 001510... OK
+[88/8000] 001544... OK
+[89/8000] 001642... OK
+[90/8000] 001644... OK
+[91/8000] 001649... OK
+[92/8000] 001661... OK
+[93/8000] 001663... OK
+[94/8000] 001666... OK
+[95/8000] 001673... OK
+[96/8000] 001680... OK
+[97/8000] 001681... OK
+[98/8000] 001682... OK
+[99/8000] 001683... OK
+[100/8000] 001684... OK
+[101/8000] 001685... OK
+[102/8000] 001686... OK
+[103/8000] 001687... OK
+[104/8000] 001688... OK
+[105/8000] 001689... OK
+[106/8000] 001701... OK
+[107/8000] 001702... OK
+[108/8000] 001703... OK
+[109/8000] 001704... OK
+[110/8000] 001706... OK
+[111/8000] 001720... OK
+[112/8000] 001732... OK
+[113/8000] 001733... OK
+[114/8000] 001735... OK
+[115/8000] 001736... OK
+[116/8000] 001883... OK
+[117/8000] 001891... OK
+[118/8000] 001893... OK
+[119/8000] 001924... OK
+[120/8000] 001925... OK
+[121/8000] 001929... OK
+[122/8000] 001930... OK
+[123/8000] 002012... OK
+[124/8000] 002096... OK
+[125/8000] 002097... OK
+[126/8000] 002099... OK
+[127/8000] 003263... OK
+[128/8000] 003264... OK
+[129/8000] 003265... OK
+[130/8000] 003266... OK
+[131/8000] 003270... OK
+[132/8000] 003271... OK
+[133/8000] 003272... OK
+[134/8000] 003273... OK
+[135/8000] 003274... OK
+[136/8000] 003492... OK
+[137/8000] 003532... OK
+[138/8000] 003533... OK
+[139/8000] 003534... OK
+[140/8000] 003535... OK
+[141/8000] 003537... OK
+[142/8000] 003538... OK
+[143/8000] 003573... OK
+[144/8000] 003598... OK
+[145/8000] 003624... OK
+[146/8000] 003707... OK
+[147/8000] 003708... OK
+[148/8000] 003720... OK
+[149/8000] 003721... OK
+[150/8000] 003722... OK
+[151/8000] 003724... OK
+[152/8000] 003725... OK
+[153/8000] 003761... OK
+[154/8000] 003762... OK
+[155/8000] 003763... OK
+[156/8000] 003765... OK
+[157/8000] 003766... OK
+[158/8000] 003775... OK
+[159/8000] 003776... OK
+[160/8000] 003777... OK
+[161/8000] 003778... OK
+[162/8000] 003779... OK
+[163/8000] 003832... OK
+[164/8000] 003833... OK
+[165/8000] 003840... OK
+[166/8000] 003880... OK
+[167/8000] 003895... OK
+[168/8000] 003896... OK
+[169/8000] 003904... OK
+[170/8000] 003905... OK
+[171/8000] 003906... OK
+[172/8000] 003908... OK
+[173/8000] 003909... OK
+[174/8000] 003910... OK
+[175/8000] 003911... OK
+[176/8000] 003912... OK
+[177/8000] 003913... OK
+[178/8000] 003920... OK
+[179/8000] 003921... OK
+[180/8000] 003950... OK
+[181/8000] 004013... OK
+[182/8000] 004017... OK
+[183/8000] 004022... OK
+[184/8000] 004037... OK
+[185/8000] 004066... OK
+[186/8000] 004067... OK
+[187/8000] 004068... OK
+[188/8000] 004069... OK
+[189/8000] 004070... OK
+[190/8000] 004071... OK
+[191/8000] 004072... OK
+[192/8000] 004073... OK
+[193/8000] 004074... OK
+[194/8000] 004075... OK
+[195/8000] 004076... OK
+[196/8000] 004077... OK
+[197/8000] 004078... OK
+[198/8000] 004079... OK
+[199/8000] 004080... OK
+[200/8000] 004091... OK
+[201/8000] 004092... OK
+[202/8000] 004093... OK
+[203/8000] 004094... OK
+[204/8000] 004095... OK
+[205/8000] 004096... OK
+[206/8000] 004097... OK
+[207/8000] 004098... OK
+[208/8000] 004099... OK
+[209/8000] 004100... OK
+[210/8000] 004101... OK
+[211/8000] 004102... OK
+[212/8000] 004103... OK
+[213/8000] 004108... OK
+[214/8000] 004232... OK
+[215/8000] 004233... OK
+[216/8000] 004234... OK
+[217/8000] 004235... OK
+[218/8000] 004236... OK
+[219/8000] 004239... OK
+[220/8000] 004450... OK
+[221/8000] 004507... OK
+[222/8000] 004508... OK
+[223/8000] 004509... OK
+[224/8000] 004510... OK
+[225/8000] 004511... OK
+[226/8000] 004519... OK
+[227/8000] 004520... OK
+[228/8000] 004521... OK
+[229/8000] 004522... OK
+[230/8000] 004682... OK
+[231/8000] 004684... OK
+[232/8000] 004685... OK
+[233/8000] 004688... OK
+[234/8000] 004777... OK
+[235/8000] 004778... OK
+[236/8000] 004779... OK
+[237/8000] 004780... OK
+[238/8000] 004781... OK
+[239/8000] 004782... OK
+[240/8000] 004784... OK
+[241/8000] 004785... OK
+[242/8000] 004786... OK
+[243/8000] 004787... OK
+[244/8000] 004788... OK
+[245/8000] 004799... OK
+[246/8000] 004835... OK
+[247/8000] 004836... OK
+[248/8000] 004838... OK
+[249/8000] 004846... OK
+[250/8000] 004848... OK
+[251/8000] 004849... OK
+[252/8000] 005006... OK
+[253/8000] 005156... OK
+[254/8000] 005157... OK
+[255/8000] 005158... OK
+[256/8000] 005159... OK
+[257/8000] 005169... OK
+[258/8000] 005170... OK
+[259/8000] 005171... OK
+[260/8000] 005191... OK
+[261/8000] 005264... OK
+[262/8000] 005268... OK
+[263/8000] 005376... OK
+[264/8000] 005381... OK
+[265/8000] 005521... OK
+[266/8000] 005879... OK
+[267/8000] 005936... OK
+[268/8000] 005940... OK
+[269/8000] 006329... OK
+[270/8000] 006330... OK
+[271/8000] 006331... OK
+[272/8000] 006332... OK
+[273/8000] 006333... OK
+[274/8000] 006342... OK
+[275/8000] 006354... OK
+[276/8000] 006357... OK
+[277/8000] 006358... OK
+[278/8000] 006360... OK
+[279/8000] 006363... OK
+[280/8000] 006366... OK
+[281/8000] 006367... OK
+[282/8000] 006368... OK
+[283/8000] 006370... OK
+[284/8000] 006372... OK
+[285/8000] 006373... OK
+[286/8000] 006376... OK
+[287/8000] 006379... OK
+[288/8000] 006380... OK
+[289/8000] 006381... OK
+[290/8000] 006382... OK
+[291/8000] 006383... OK
+[292/8000] 006385... OK
+[293/8000] 006387... OK
+[294/8000] 006389... OK
+[295/8000] 006390... OK
+[296/8000] 006393... OK
+[297/8000] 006394... OK
+[298/8000] 006396... OK
+[299/8000] 006406... OK
+[300/8000] 006407... OK
+[301/8000] 006439... OK
+[302/8000] 006440... OK
+[303/8000] 006442... OK
+[304/8000] 006443... OK
+[305/8000] 006448... OK
+[306/8000] 006459... OK
+[307/8000] 006461... OK
+[308/8000] 006463... OK
+[309/8000] 006467... OK
+[310/8000] 006469... OK
+[311/8000] 006517... OK
+[312/8000] 006519... OK
+[313/8000] 006603... OK
+[314/8000] 006605... OK
+[315/8000] 006606... OK
+[316/8000] 006607... OK
+[317/8000] 006608... OK
+[318/8000] 006609... OK
+[319/8000] 006610... OK
+[320/8000] 006611... OK
+[321/8000] 006674... OK
+[322/8000] 006675... OK
+[323/8000] 006677... OK
+[324/8000] 006679... OK
+[325/8000] 006680... OK
+[326/8000] 006684... OK
+[327/8000] 006762... OK
+[328/8000] 006776... OK
+[329/8000] 006778... OK
+[330/8000] 006779... OK
+[331/8000] 006782... OK
+[332/8000] 006783... OK
+[333/8000] 006788... OK
+[334/8000] 006802... OK
+[335/8000] 006803... OK
+[336/8000] 006854... OK
+[337/8000] 006855... OK
+[338/8000] 006856... OK
+[339/8000] 006857... OK
+[340/8000] 007011... OK
+[341/8000] 007373... OK
+[342/8000] 007374... OK
+[343/8000] 007375... OK
+[344/8000] 007376... OK
+[345/8000] 007377... OK
+[346/8000] 007378... OK
+[347/8000] 007379... OK
+[348/8000] 007381... OK
+[349/8000] 007383... OK
+[350/8000] 007385... OK
+[351/8000] 007386... OK
+[352/8000] 007388... OK
+[353/8000] 007391... OK
+[354/8000] 007393... OK
+[355/8000] 007481... OK
+[356/8000] 007482... OK
+[357/8000] 007483... OK
+[358/8000] 007487... OK
+[359/8000] 007488... OK
+[360/8000] 007489... OK
+[361/8000] 007490... OK
+[362/8000] 007491... OK
+[363/8000] 007492... OK
+[364/8000] 007495... OK
+[365/8000] 007526... OK
+[366/8000] 007527... OK
+[367/8000] 007528... OK
+[368/8000] 007529... OK
+[369/8000] 007548... OK
+[370/8000] 007554... OK
+[371/8000] 007709... OK
+[372/8000] 007710... OK
+[373/8000] 007711... OK
+[374/8000] 007712... OK
+[375/8000] 007713... OK
+[376/8000] 007872... OK
+[377/8000] 008056... OK
+[378/8000] 008208... OK
+[379/8000] 008256... OK
+[380/8000] 008259... OK
+[381/8000] 008261... OK
+[382/8000] 008345... OK
+[383/8000] 008357... OK
+[384/8000] 008363... OK
+[385/8000] 008372... OK
+[386/8000] 008416... OK
+[387/8000] 009152... OK
+[388/8000] 009155... OK
+[389/8000] 009307... OK
+[390/8000] 009476... OK
+[391/8000] 009477... OK
+[392/8000] 009491... OK
+[393/8000] 009505... OK
+[394/8000] 009511... OK
+[395/8000] 009512... OK
+[396/8000] 009513... OK
+[397/8000] 009550... OK
+[398/8000] 009553... OK
+[399/8000] 009555... OK
+[400/8000] 009557... OK
+[401/8000] 009559... OK
+[402/8000] 009560... OK
+[403/8000] 009678... OK
+[404/8000] 009721... OK
+[405/8000] 009846... OK
+[406/8000] 009887... OK
+[407/8000] 009888... OK
+[408/8000] 009918... OK
+[409/8000] 009962... OK
+[410/8000] 010186... OK
+[411/8000] 010192... OK
+[412/8000] 010250... OK
+[413/8000] 010374... OK
+[414/8000] 010375... OK
+[415/8000] 010376... OK
+[416/8000] 010377... OK
+[417/8000] 010381... OK
+[418/8000] 010382... OK
+[419/8000] 010383... OK
+[420/8000] 010384... OK
+[421/8000] 010385... OK
+[422/8000] 010386... OK
+[423/8000] 010387... OK
+[424/8000] 010388... OK
+[425/8000] 010389... OK
+[426/8000] 010435... OK
+[427/8000] 010438... OK
+[428/8000] 010439... OK
+[429/8000] 010440... OK
+[430/8000] 010441... OK
+[431/8000] 010442... OK
+[432/8000] 010443... OK
+[433/8000] 010444... OK
+[434/8000] 010447... OK
+[435/8000] 010458... OK
+[436/8000] 010480... OK
+[437/8000] 010481... OK
+[438/8000] 010485... OK
+[439/8000] 010521... OK
+[440/8000] 010527... OK
+[441/8000] 010535... OK
+[442/8000] 010541... OK
+[443/8000] 010575... OK
+[444/8000] 010577... OK
+[445/8000] 010668... OK
+[446/8000] 010669... OK
+[447/8000] 010670... OK
+[448/8000] 010671... OK
+[449/8000] 010672... OK
+[450/8000] 010673... OK
+[451/8000] 010674... OK
+[452/8000] 010675... OK
+[453/8000] 010676... OK
+[454/8000] 010677... OK
+[455/8000] 010678... OK
+[456/8000] 010679... OK
+[457/8000] 010682... OK
+[458/8000] 010684... OK
+[459/8000] 010693... OK
+[460/8000] 010694... OK
+[461/8000] 010695... OK
+[462/8000] 010696... OK
+[463/8000] 010697... OK
+[464/8000] 010698... OK
+[465/8000] 010699... OK
+[466/8000] 010805... OK
+[467/8000] 010806... OK
+[468/8000] 010807... OK
+[469/8000] 010808... OK
+[470/8000] 010809... OK
+[471/8000] 010810... OK
+[472/8000] 010983... OK
+[473/8000] 010992... OK
+[474/8000] 010993... OK
+[475/8000] 011019... OK
+[476/8000] 011020... OK
+[477/8000] 011059... OK
+[478/8000] 011198... OK
+[479/8000] 011199... OK
+[480/8000] 011200... OK
+[481/8000] 011204... OK
+[482/8000] 011206... OK
+[483/8000] 011234... OK
+[484/8000] 011237... OK
+[485/8000] 011239... OK
+[486/8000] 011242... OK
+[487/8000] 011261... OK
+[488/8000] 011262... OK
+[489/8000] 011264... OK
+[490/8000] 011268... OK
+[491/8000] 011298... OK
+[492/8000] 011299... OK
+[493/8000] 011306... OK
+[494/8000] 011333... OK
+[495/8000] 011334... OK
+[496/8000] 011503... OK
+[497/8000] 011504... OK
+[498/8000] 011505... OK
+[499/8000] 011508... OK
+[500/8000] 011544... OK
+
+Presupuesto de chunks alcanzado (10000).
+
+=== REPORTE DE INGESTA (audio) ===
+Tiempo total          : 4.09 min
+Canciones con éxito   : 500
+Canciones con error   : 0
+Chunks insertados     : 10000
+Construyendo índice (text) del codebook id=1...
+
+--- ÍNDICE CONSTRUIDO ---
+Chunks indexados     : 10000
+Términos/visual words: 5000
+Postings totales     : 128472
+Tiempo de build      : 769.3 ms
+Tiempo de guardado   : 50.8 ms
+Tamaño en disco      : 1.67 MB
+Guardado en          : models\text\index_text.pkl
+Construyendo índice (image) del codebook id=2...
+
+--- ÍNDICE CONSTRUIDO ---
+Chunks indexados     : 10000
+Términos/visual words: 256
+Postings totales     : 1003169
+Tiempo de build      : 681.0 ms
+Tiempo de guardado   : 358.5 ms
+Tamaño en disco      : 13.62 MB
+Guardado en          : models\image\index_image.pkl
+Construyendo índice (audio) del codebook id=3...
+
+--- ÍNDICE CONSTRUIDO ---
+Chunks indexados     : 500
+Términos/visual words: 240
+Postings totales     : 5059
+Tiempo de build      : 48.4 ms
+Tiempo de guardado   : 1.3 ms
+Tamaño en disco      : 0.09 MB
+Guardado en          : models\audio\index_audio.pkl
+[INFO] Chunks de 'text' en la BD: 10000 (escala declarada: 10k = 10000)
+[INFO] Etiquetas de relevancia: 1721 sources, 44 clases.
+[INFO] --queries vacío. Muestreando 5 consultas de la BD...
+[INFO] Consultas seleccionadas: ['Oo ooo oooo oooo ooo ooo ooo  \nHush  \nHush  \nHushabye  \nOo ooo oooo oooo ooo ooo ooo  \nHush  \nHush  \nHushabye  \nOo ooo oooo oooo ooo ooo ooo', "One of these days you'll be sorry  \nToo many houses on the stilt  \nThree million years or just a story  \nFour on the floor up to the hilt", "Just take a look at this number  \nIt's got that certain swing  \nThat makes you wanna sing", "Once upon a time  \nBarbie it's magic!  \nFairy tales unwind  \nWe're new but classic  \nAdventures in your mind  \nWe'll have the best time now  \nOnce upon a time!", 'I have no more to give you  \nI have no room to share  \nI know the road I follow going nowhere']
+
+[INFO] Iniciando evaluación: 15 ejecuciones (5 consultas × 3 runs)
+[INFO] Resultados ? results\10k\results_10k_text_20260704_120603.csv
+
+  ? [TEXT] run=1 | q='Oo ooo oooo oooo ooo ooo ooo  \nHush  \nHush  \nHushabye  \nOo o'
+     Lado A: 0.8 ms | Lado B: 11.0 ms | P@10 A/B: 0.67/0.67 | overlap: 80.00%
+  ? [TEXT] run=2 | q='Oo ooo oooo oooo ooo ooo ooo  \nHush  \nHush  \nHushabye  \nOo o'
+     Lado A: 0.8 ms | Lado B: 3.7 ms | P@10 A/B: 0.67/0.67 | overlap: 80.00%
+  ? [TEXT] run=3 | q='Oo ooo oooo oooo ooo ooo ooo  \nHush  \nHush  \nHushabye  \nOo o'
+     Lado A: 0.6 ms | Lado B: 3.4 ms | P@10 A/B: 0.67/0.67 | overlap: 80.00%
+  ? [TEXT] run=1 | q="One of these days you'll be sorry  \nToo many houses on the s"
+     Lado A: 3.6 ms | Lado B: 11.0 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
+  ? [TEXT] run=2 | q="One of these days you'll be sorry  \nToo many houses on the s"
+     Lado A: 4.0 ms | Lado B: 12.3 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
+  ? [TEXT] run=3 | q="One of these days you'll be sorry  \nToo many houses on the s"
+     Lado A: 3.8 ms | Lado B: 10.6 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
+  ? [TEXT] run=1 | q="Just take a look at this number  \nIt's got that certain swin"
+     Lado A: 4.5 ms | Lado B: 9.4 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
+  ? [TEXT] run=2 | q="Just take a look at this number  \nIt's got that certain swin"
+     Lado A: 4.6 ms | Lado B: 9.7 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
+  ? [TEXT] run=3 | q="Just take a look at this number  \nIt's got that certain swin"
+     Lado A: 5.5 ms | Lado B: 10.3 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
+  ? [TEXT] run=1 | q="Once upon a time  \nBarbie it's magic!  \nFairy tales unwind  "
+     Lado A: 3.1 ms | Lado B: 18.9 ms | P@10 A/B: 0.11/0.11 | overlap: 20.00%
+  ? [TEXT] run=2 | q="Once upon a time  \nBarbie it's magic!  \nFairy tales unwind  "
+     Lado A: 2.7 ms | Lado B: 101.0 ms | P@10 A/B: 0.11/0.11 | overlap: 20.00%
+  ? [TEXT] run=3 | q="Once upon a time  \nBarbie it's magic!  \nFairy tales unwind  "
+     Lado A: 3.9 ms | Lado B: 102.7 ms | P@10 A/B: 0.11/0.11 | overlap: 20.00%
+  ? [TEXT] run=1 | q='I have no more to give you  \nI have no room to share  \nI kno'
+     Lado A: 5.4 ms | Lado B: 52.7 ms | P@10 A/B: 0.22/0.11 | overlap: 20.00%
+  ? [TEXT] run=2 | q='I have no more to give you  \nI have no room to share  \nI kno'
+     Lado A: 4.8 ms | Lado B: 48.5 ms | P@10 A/B: 0.22/0.11 | overlap: 20.00%
+  ? [TEXT] run=3 | q='I have no more to give you  \nI have no room to share  \nI kno'
+     Lado A: 4.8 ms | Lado B: 49.5 ms | P@10 A/B: 0.22/0.11 | overlap: 20.00%
+
+[OK] CSV guardado en: results\10k\results_10k_text_20260704_120603.csv
+
+?????????????????????? RESUMEN ??????????????????????
+  Escala          : 10k (chunks reales: 10000)
+  Modalidad       : text
+  Consultas totales: 15
+
+  Latencia promedio  Lado A : 3.53 ms
+  Latencia promedio  Lado B : 30.31 ms
+  Throughput prom.   Lado A : 471.33 QPS
+  Throughput prom.   Lado B : 90.72 QPS
+  RAM delta prom.    Lado A : 0.0034 MB
+  RAM delta prom.    Lado B : 0.0021 MB
+  Mem pico prom.     Lado A : 0.6518 MB
+  Mem pico prom.     Lado B : 0.3452 MB
+  IO shared_hit prom Lado B : 579 bloques
+  IO shared_read pro Lado B : 0 bloques
+  Precision@10 prom.  Lado A : 20.00%
+  Precision@10 prom.  Lado B : 17.78%
+  Recall@10 prom.     Lado A : 3.40%
+  Recall@10 prom.     Lado B : 3.22%
+  Overlap@10 promedio : 28.00%
+?????????????????????????????????????????????????????
+[INFO] Chunks de 'image' en la BD: 10000 (escala declarada: 10k = 10000)
+[INFO] Etiquetas de relevancia: 1112 sources, 35 clases.
+[INFO] --queries vacío. Muestreando 5 consultas de la BD...
+[INFO] Consultas seleccionadas: ['data\\raw\\fashion-dataset\\images\\10016.jpg', 'data\\raw\\fashion-dataset\\images\\10719.jpg', 'data\\raw\\fashion-dataset\\images\\10155.jpg', 'data\\raw\\fashion-dataset\\images\\10587.jpg', 'data\\raw\\fashion-dataset\\images\\10700.jpg']
+
+[INFO] Iniciando evaluación: 15 ejecuciones (5 consultas × 3 runs)
+[INFO] Resultados ? results\10k\results_10k_image_20260704_120608.csv
+
+  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10016.jpg'
+     Lado A: 2662.1 ms | Lado B: 66.4 ms | P@10 A/B: 0.00/0.00 | overlap: 100.00%
+  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10016.jpg'
+     Lado A: 696.9 ms | Lado B: 53.9 ms | P@10 A/B: 0.00/0.00 | overlap: 100.00%
+  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10016.jpg'
+     Lado A: 678.9 ms | Lado B: 56.6 ms | P@10 A/B: 0.00/0.00 | overlap: 100.00%
+  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10719.jpg'
+     Lado A: 212.0 ms | Lado B: 48.8 ms | P@10 A/B: 0.00/0.00 | overlap: 80.00%
+  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10719.jpg'
+     Lado A: 212.8 ms | Lado B: 48.5 ms | P@10 A/B: 0.00/0.00 | overlap: 80.00%
+  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10719.jpg'
+     Lado A: 218.4 ms | Lado B: 55.5 ms | P@10 A/B: 0.00/0.00 | overlap: 80.00%
+  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10155.jpg'
+     Lado A: 280.4 ms | Lado B: 48.4 ms | P@10 A/B: 0.11/0.11 | overlap: 80.00%
+  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10155.jpg'
+     Lado A: 363.2 ms | Lado B: 44.6 ms | P@10 A/B: 0.11/0.11 | overlap: 80.00%
+  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10155.jpg'
+     Lado A: 370.3 ms | Lado B: 44.7 ms | P@10 A/B: 0.11/0.11 | overlap: 80.00%
+  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10587.jpg'
+     Lado A: 719.6 ms | Lado B: 56.3 ms | P@10 A/B: 1.00/1.00 | overlap: 100.00%
+  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10587.jpg'
+     Lado A: 720.9 ms | Lado B: 54.1 ms | P@10 A/B: 1.00/1.00 | overlap: 100.00%
+  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10587.jpg'
+     Lado A: 816.5 ms | Lado B: 56.6 ms | P@10 A/B: 1.00/1.00 | overlap: 100.00%
+  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10700.jpg'
+     Lado A: 483.7 ms | Lado B: 41.2 ms | P@10 A/B: 0.56/0.56 | overlap: 100.00%
+  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10700.jpg'
+     Lado A: 463.1 ms | Lado B: 60.8 ms | P@10 A/B: 0.56/0.56 | overlap: 100.00%
+  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10700.jpg'
+     Lado A: 402.5 ms | Lado B: 43.4 ms | P@10 A/B: 0.56/0.56 | overlap: 100.00%
+
+[OK] CSV guardado en: results\10k\results_10k_image_20260704_120608.csv
+
+?????????????????????? RESUMEN ??????????????????????
+  Escala          : 10k (chunks reales: 10000)
+  Modalidad       : image
+  Consultas totales: 15
+
+  Latencia promedio  Lado A : 620.08 ms
+  Latencia promedio  Lado B : 51.99 ms
+  Throughput prom.   Lado A : 2.47 QPS
+  Throughput prom.   Lado B : 19.57 QPS
+  RAM delta prom.    Lado A : 4.9232 MB
+  RAM delta prom.    Lado B : 1.8862 MB
+  Mem pico prom.     Lado A : 2.3080 MB
+  Mem pico prom.     Lado B : 0.1112 MB
+  IO shared_hit prom Lado B : 620 bloques
+  IO shared_read pro Lado B : 0 bloques
+  Precision@10 prom.  Lado A : 33.33%
+  Precision@10 prom.  Lado B : 33.33%
+  Recall@10 prom.     Lado A : 2.33%
+  Recall@10 prom.     Lado B : 2.33%
+  Overlap@10 promedio : 92.00%
+?????????????????????????????????????????????????????
+[INFO] Chunks de 'audio' en la BD: 10000 (escala declarada: 10k = 10000)
+[INFO] Etiquetas de relevancia: 500 sources, 8 clases.
+[INFO] --queries vacío. Muestreando 5 consultas de la BD...
+[INFO] Consultas seleccionadas: ['data\\raw\\fma_small\\000\\000716.mp3', 'data\\raw\\fma_small\\006\\006610.mp3', 'data\\raw\\fma_small\\004\\004782.mp3', 'data\\raw\\fma_small\\004\\004096.mp3', 'data\\raw\\fma_small\\003\\003840.mp3']
+
+[INFO] Iniciando evaluación: 15 ejecuciones (5 consultas × 3 runs)
+[INFO] Resultados ? results\10k\results_10k_audio_20260704_120656.csv
+
+  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\000\\000716.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.6 ms | Lado B: 131.3 ms | P@10 A/B: 0.33/0.67 | overlap: 30.00%
+  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\000\\000716.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.9 ms | Lado B: 127.9 ms | P@10 A/B: 0.33/0.67 | overlap: 30.00%
+  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\000\\000716.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.4 ms | Lado B: 121.7 ms | P@10 A/B: 0.33/0.67 | overlap: 30.00%
+  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\006\\006610.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.8 ms | Lado B: 104.2 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
+  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\006\\006610.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.7 ms | Lado B: 107.3 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
+  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\006\\006610.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.6 ms | Lado B: 144.0 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
+  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\004\\004782.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.5 ms | Lado B: 112.1 ms | P@10 A/B: 0.89/0.40 | overlap: 10.00%
+  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\004\\004782.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.4 ms | Lado B: 105.7 ms | P@10 A/B: 0.89/0.40 | overlap: 10.00%
+  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\004\\004782.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.4 ms | Lado B: 105.7 ms | P@10 A/B: 0.89/0.40 | overlap: 10.00%
+  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\004\\004096.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 2.0 ms | Lado B: 106.7 ms | P@10 A/B: 0.67/0.00 | overlap: 10.00%
+  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\004\\004096.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 2.1 ms | Lado B: 111.0 ms | P@10 A/B: 0.67/0.00 | overlap: 10.00%
+  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\004\\004096.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 2.7 ms | Lado B: 121.4 ms | P@10 A/B: 0.67/0.00 | overlap: 10.00%
+  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\003\\003840.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.5 ms | Lado B: 112.9 ms | P@10 A/B: 0.44/0.67 | overlap: 50.00%
+  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\003\\003840.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.2 ms | Lado B: 118.5 ms | P@10 A/B: 0.44/0.67 | overlap: 50.00%
+  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\003\\003840.mp3'
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+     Lado A: 1.1 ms | Lado B: 108.9 ms | P@10 A/B: 0.44/0.67 | overlap: 50.00%
+
+[OK] CSV guardado en: results\10k\results_10k_audio_20260704_120656.csv
+
+?????????????????????? RESUMEN ??????????????????????
+  Escala          : 10k (chunks reales: 10000)
+  Modalidad       : audio
+  Consultas totales: 15
+
+  Latencia promedio  Lado A : 1.66 ms
+  Latencia promedio  Lado B : 115.96 ms
+  Throughput prom.   Lado A : 628.43 QPS
+  Throughput prom.   Lado B : 8.69 QPS
+  RAM delta prom.    Lado A : 0.0078 MB
+  RAM delta prom.    Lado B : 0.0023 MB
+  Mem pico prom.     Lado A : 0.0522 MB
+  Mem pico prom.     Lado B : 0.1123 MB
+  IO shared_hit prom Lado B : 1429 bloques
+  IO shared_read pro Lado B : 0 bloques
+  Precision@10 prom.  Lado A : 46.67%
+  Precision@10 prom.  Lado B : 34.67%
+  Recall@10 prom.     Lado A : 4.42%
+  Recall@10 prom.     Lado B : 3.18%
+  Overlap@10 promedio : 22.00%
+?????????????????????????????????????????????????????
+
+########## ESCALA 10k (10000 chunks x 3 modalidad(es)) ##########
+
+======================================================================
+>>> Ingesta text (10k)
+    D:\multimodal-search\.venv\Scripts\python.exe -m scripts.ingest --modality text --max-chunks 10000 --truncate
+======================================================================
+
+[OK] Ingesta text (10k) completada en 7.8 min.
+
+======================================================================
+>>> Ingesta image (10k)
+    D:\multimodal-search\.venv\Scripts\python.exe -m scripts.ingest --modality image --max-chunks 10000 --limit 999999 --sample 200000
+======================================================================
+
+[OK] Ingesta image (10k) completada en 17.8 min.
+
+======================================================================
+>>> Ingesta audio (10k)
+    D:\multimodal-search\.venv\Scripts\python.exe -m scripts.ingest --modality audio --max-chunks 10000 --limit 999999 --hop-ms 1500
+======================================================================
+
+[OK] Ingesta audio (10k) completada en 4.2 min.
+
+======================================================================
+>>> Índice invertido text
+    D:\multimodal-search\.venv\Scripts\python.exe -m scripts.build_index --modality text
+======================================================================
+
+[OK] Índice invertido text completada en 0.1 min.
+
+======================================================================
+>>> Índice invertido image
+    D:\multimodal-search\.venv\Scripts\python.exe -m scripts.build_index --modality image
+======================================================================
+
+[OK] Índice invertido image completada en 0.1 min.
+
+======================================================================
+>>> Índice invertido audio
+    D:\multimodal-search\.venv\Scripts\python.exe -m scripts.build_index --modality audio
+======================================================================
+
+[OK] Índice invertido audio completada en 0.0 min.
+
+======================================================================
+>>> Evaluación text (10k)
+    D:\multimodal-search\.venv\Scripts\python.exe -m scripts.evaluate_performance --modality text --scale 10k --k 10 --runs 3 --n_queries 5 --output results/10k
+======================================================================
+
+[OK] Evaluación text (10k) completada en 0.1 min.
+
+======================================================================
+>>> Evaluación image (10k)
+    D:\multimodal-search\.venv\Scripts\python.exe -m scripts.evaluate_performance --modality image --scale 10k --k 10 --runs 3 --n_queries 5 --output results/10k
+======================================================================
+
+[OK] Evaluación image (10k) completada en 0.8 min.
+
+======================================================================
+>>> Evaluación audio (10k)
+    D:\multimodal-search\.venv\Scripts\python.exe -m scripts.evaluate_performance --modality audio --scale 10k --k 10 --runs 3 --n_queries 5 --output results/10k
+======================================================================
+
+[OK] Evaluación audio (10k) completada en 0.2 min.
+
+########## ESCALA 10k COMPLETA en 31.1 min ##########
+CSVs en: results/10k/  ?  genera gráficos con: python -m scripts.plot_results

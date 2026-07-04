@@ -1,0 +1,64 @@
+scale,real_chunks,modality,query,run,lado_a_latencia_ms,lado_a_qps,lado_a_ram_delta_mb,lado_a_mem_pico_mb,lado_a_io_reads,lado_a_io_read_mb,lado_a_io_load_mb,lado_a_index_mb,lado_a_precision,lado_a_recall,lado_b_latencia_ms,lado_b_qps,lado_b_ram_delta_mb,lado_b_mem_pico_mb,lado_b_precision,lado_b_recall,lado_b_io_shared_hit,lado_b_io_shared_read,overlap_at_k
+1k,1000,text,"Crackin' up (I have been waiting for these visitors)  
+My whole world is falling, going crazy  
+There is no escaping now, I'm",1,0.547,1827.82,0.0625,0.1329,0,0.0,0.2212,0.1866,0.6667,0.0536,11.451,87.33,0.0039,0.0049,0.4444,0.0357,107,0,0.2
+1k,1000,text,"Crackin' up (I have been waiting for these visitors)  
+My whole world is falling, going crazy  
+There is no escaping now, I'm",2,0.486,2059.31,0.0,0.1329,0,0.0,0.2212,0.1866,0.6667,0.0536,3.731,268.02,0.0039,0.0049,0.4444,0.0357,107,0,0.2
+1k,1000,text,"Crackin' up (I have been waiting for these visitors)  
+My whole world is falling, going crazy  
+There is no escaping now, I'm",3,0.585,1710.28,0.0,0.1329,0,0.0,0.2212,0.1866,0.6667,0.0536,3.661,273.15,0.0,0.0048,0.4444,0.0357,107,0,0.2
+1k,1000,text,"Slipping through my fingers all the time  
+Do I really see what's in her mind  
+Each time I think I'm close to knowing  
+She keeps on growing  
+Slipping through my fingers all the time",1,0.763,1310.62,0.0,0.1803,0,0.0,0.2212,0.1866,0.5556,0.0446,4.218,237.08,0.0,0.0048,0.4444,0.0357,107,0,0.3
+1k,1000,text,"Slipping through my fingers all the time  
+Do I really see what's in her mind  
+Each time I think I'm close to knowing  
+She keeps on growing  
+Slipping through my fingers all the time",2,0.923,1083.42,0.0,0.1803,0,0.0,0.2212,0.1866,0.5556,0.0446,4.713,212.17,0.0,0.0048,0.4444,0.0357,107,0,0.3
+1k,1000,text,"Slipping through my fingers all the time  
+Do I really see what's in her mind  
+Each time I think I'm close to knowing  
+She keeps on growing  
+Slipping through my fingers all the time",3,0.739,1353.91,0.0,0.1803,0,0.0,0.2212,0.1866,0.5556,0.0446,4.455,224.45,0.0039,0.005,0.4444,0.0357,107,0,0.3
+1k,1000,text,"People need hope, people need lovin'  
+People need trust from a fellow man  
+People nee love to make a good livin'  
+People need faith in a helping hand",1,0.741,1350.07,0.0,0.1695,0,0.0,0.2212,0.1866,0.5556,0.0446,4.509,221.78,0.0,0.0046,0.3333,0.0268,107,0,0.3
+1k,1000,text,"People need hope, people need lovin'  
+People need trust from a fellow man  
+People nee love to make a good livin'  
+People need faith in a helping hand",2,0.725,1380.07,0.0,0.1695,0,0.0,0.2212,0.1866,0.5556,0.0446,4.86,205.76,0.0,0.0046,0.3333,0.0268,107,0,0.3
+1k,1000,text,"People need hope, people need lovin'  
+People need trust from a fellow man  
+People nee love to make a good livin'  
+People need faith in a helping hand",3,0.725,1379.5,0.0,0.1695,0,0.0,0.2212,0.1866,0.5556,0.0446,4.775,209.42,0.0,0.0046,0.3333,0.0268,107,0,0.3
+1k,1000,text,"Found myself today singing out your name,  
+You said I'm crazy,  
+If I am I'm crazy for you.",1,0.444,2253.27,0.0,0.1056,0,0.0,0.2212,0.1866,0.1111,0.0909,3.951,253.11,0.0,0.0045,0.0,0.0,107,0,0.3
+1k,1000,text,"Found myself today singing out your name,  
+You said I'm crazy,  
+If I am I'm crazy for you.",2,0.546,1830.16,0.0,0.1056,0,0.0,0.2212,0.1866,0.1111,0.0909,8.612,116.12,0.0,0.0045,0.0,0.0,107,0,0.3
+1k,1000,text,"Found myself today singing out your name,  
+You said I'm crazy,  
+If I am I'm crazy for you.",3,0.367,2723.31,0.0039,0.1056,0,0.0,0.2212,0.1866,0.1111,0.0909,7.626,131.13,0.0,0.0045,0.0,0.0,107,0,0.3
+1k,1000,text,"So I say  
+Thank you for the music, the songs I'm singing  
+Thanks for all the joy they're bringing  
+Who can live without it, I ask in all honesty  
+What would life be?  
+Without a song or a dance wh",1,0.59,1695.49,0.0,0.1448,0,0.0,0.2212,0.1866,0.8889,0.0714,21.311,46.92,0.0,0.0046,0.7778,0.0625,107,0,0.6
+1k,1000,text,"So I say  
+Thank you for the music, the songs I'm singing  
+Thanks for all the joy they're bringing  
+Who can live without it, I ask in all honesty  
+What would life be?  
+Without a song or a dance wh",2,0.66,1515.38,0.0,0.1448,0,0.0,0.2212,0.1866,0.8889,0.0714,21.56,46.38,0.0,0.0046,0.7778,0.0625,107,0,0.6
+1k,1000,text,"So I say  
+Thank you for the music, the songs I'm singing  
+Thanks for all the joy they're bringing  
+Who can live without it, I ask in all honesty  
+What would life be?  
+Without a song or a dance wh",3,0.598,1671.68,0.0,0.1448,0,0.0,0.2212,0.1866,0.8889,0.0714,21.365,46.81,0.0,0.0046,0.7778,0.0625,107,0,0.6

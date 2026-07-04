@@ -33,25 +33,36 @@ def insert_source(source_id: str, modality: str, uri: str, metadata: dict) -> No
 
 
 def insert_chunks(chunks: Sequence[Chunk]) -> list[int]:
+    """Inserta chunks en lote y devuelve sus ids en el mismo orden.
+
+    Usa executemany con returning=True (psycopg3) para evitar un round-trip
+    por fila; el tsv solo se calcula para chunks de texto.
+    """
+    if not chunks:
+        return []
+    params = [
+        (ch.source_id, ch.modality.value, ch.position,
+         ch.payload if ch.modality.value == "text" else None,
+         ch.modality.value,
+         ch.payload if ch.modality.value == "text" else None,
+         json.dumps(ch.metadata))
+        for ch in chunks
+    ]
     ids: list[int] = []
     with get_conn() as conn:
         with conn.cursor() as cur:
-            for ch in chunks:
-                if ch.modality.value == "text":
-                    cur.execute(
-                        "INSERT INTO chunks (source_id, modality, position, payload, tsv, metadata) "
-                        "VALUES (%s, %s, %s, %s, to_tsvector('english', %s), %s) RETURNING id",
-                        (ch.source_id, ch.modality.value, ch.position,
-                         ch.payload, ch.payload, json.dumps(ch.metadata)),
-                    )
-                else:
-                    cur.execute(
-                        "INSERT INTO chunks (source_id, modality, position, payload, metadata) "
-                        "VALUES (%s, %s, %s, %s, %s) RETURNING id",
-                        (ch.source_id, ch.modality.value, ch.position,
-                         None, json.dumps(ch.metadata)),
-                    )
+            cur.executemany(
+                "INSERT INTO chunks (source_id, modality, position, payload, tsv, metadata) "
+                "VALUES (%s, %s, %s, %s, "
+                "        CASE WHEN %s = 'text' THEN to_tsvector('english', %s) END, %s) "
+                "RETURNING id",
+                params,
+                returning=True,
+            )
+            while True:
                 ids.append(cur.fetchone()[0])
+                if not cur.nextset():
+                    break
         conn.commit()
     return ids
 
@@ -128,6 +139,37 @@ def truncate_all() -> None:
             "embeddings_image, embeddings_audio RESTART IDENTITY CASCADE"
         )
         conn.commit()
+
+
+# Etiqueta de relevancia (ground truth) por modalidad, leída de sources.metadata.
+_LABEL_KEYS = {"image": "articleType", "audio": "genre", "text": "artist"}
+
+
+def get_source_labels(modality: str) -> dict[str, str]:
+    """Devuelve {source_id: etiqueta} para calcular precision/recall.
+
+    image -> articleType (styles.csv) | audio -> genre (FMA genre_top)
+    text  -> artist (spotify CSV). Fuentes sin etiqueta se omiten.
+    """
+    key = _LABEL_KEYS.get(modality)
+    if key is None:
+        return {}
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT id, metadata->>%s FROM sources WHERE modality = %s",
+            (key, modality),
+        ).fetchall()
+    return {str(sid): label for sid, label in rows if label}
+
+
+def get_latest_codebook_params(modality: str) -> dict | None:
+    """Params (window_ms, hop_ms, rows, cols, ...) del codebook más reciente."""
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT params FROM codebooks WHERE modality = %s ORDER BY id DESC LIMIT 1",
+            (modality,),
+        ).fetchone()
+        return row[0] if row else None
 
 
 def get_latest_codebook_id(modality: str) -> int | None:

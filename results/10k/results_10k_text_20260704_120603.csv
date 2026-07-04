@@ -1,0 +1,79 @@
+scale,real_chunks,modality,query,run,lado_a_latencia_ms,lado_a_qps,lado_a_ram_delta_mb,lado_a_mem_pico_mb,lado_a_precision,lado_a_recall,lado_b_latencia_ms,lado_b_qps,lado_b_ram_delta_mb,lado_b_mem_pico_mb,lado_b_precision,lado_b_recall,lado_b_io_shared_hit,lado_b_io_shared_read,overlap_at_k
+10k,10000,text,"Oo ooo oooo oooo ooo ooo ooo  
+Hush  
+Hush  
+Hushabye  
+Oo ooo oooo oooo ooo ooo ooo  
+Hush  
+Hush  
+Hushabye  
+Oo ooo oooo oooo ooo ooo ooo",1,0.849,1178.27,0.0234,0.2136,0.6667,0.075,11.019,90.76,0.0078,0.0108,0.6667,0.075,114,0,0.8
+10k,10000,text,"Oo ooo oooo oooo ooo ooo ooo  
+Hush  
+Hush  
+Hushabye  
+Oo ooo oooo oooo ooo ooo ooo  
+Hush  
+Hush  
+Hushabye  
+Oo ooo oooo oooo ooo ooo ooo",2,0.84,1189.77,0.0078,0.2136,0.6667,0.075,3.672,272.33,0.0039,0.0106,0.6667,0.075,114,0,0.8
+10k,10000,text,"Oo ooo oooo oooo ooo ooo ooo  
+Hush  
+Hush  
+Hushabye  
+Oo ooo oooo oooo ooo ooo ooo  
+Hush  
+Hush  
+Hushabye  
+Oo ooo oooo oooo ooo ooo ooo",3,0.576,1737.32,0.0039,0.2136,0.6667,0.075,3.426,291.9,0.0,0.0106,0.6667,0.075,114,0,0.8
+10k,10000,text,"One of these days you'll be sorry  
+Too many houses on the stilt  
+Three million years or just a story  
+Four on the floor up to the hilt",1,3.621,276.17,0.0039,0.6639,0.0,0.0,10.992,90.98,0.0078,0.4018,0.0,0.0,681,0,0.1
+10k,10000,text,"One of these days you'll be sorry  
+Too many houses on the stilt  
+Three million years or just a story  
+Four on the floor up to the hilt",2,3.981,251.22,0.0,0.6639,0.0,0.0,12.294,81.34,0.0078,0.4018,0.0,0.0,681,0,0.1
+10k,10000,text,"One of these days you'll be sorry  
+Too many houses on the stilt  
+Three million years or just a story  
+Four on the floor up to the hilt",3,3.808,262.61,0.0,0.6639,0.0,0.0,10.576,94.55,0.0039,0.4021,0.0,0.0,681,0,0.1
+10k,10000,text,"Just take a look at this number  
+It's got that certain swing  
+That makes you wanna sing",1,4.472,223.59,0.0,0.9097,0.0,0.0,9.431,106.03,0.0,0.3998,0.0,0.0,662,0,0.1
+10k,10000,text,"Just take a look at this number  
+It's got that certain swing  
+That makes you wanna sing",2,4.633,215.84,0.0078,0.9097,0.0,0.0,9.666,103.46,0.0,0.3998,0.0,0.0,662,0,0.1
+10k,10000,text,"Just take a look at this number  
+It's got that certain swing  
+That makes you wanna sing",3,5.46,183.14,0.0,0.9097,0.0,0.0,10.28,97.27,0.0,0.3998,0.0,0.0,662,0,0.1
+10k,10000,text,"Once upon a time  
+Barbie it's magic!  
+Fairy tales unwind  
+We're new but classic  
+Adventures in your mind  
+We'll have the best time now  
+Once upon a time!",1,3.096,323.04,0.0,0.5834,0.1111,0.0769,18.945,52.78,0.0,0.5272,0.1111,0.0769,778,0,0.2
+10k,10000,text,"Once upon a time  
+Barbie it's magic!  
+Fairy tales unwind  
+We're new but classic  
+Adventures in your mind  
+We'll have the best time now  
+Once upon a time!",2,2.711,368.8,0.0,0.5834,0.1111,0.0769,100.95,9.91,0.0,0.5267,0.1111,0.0769,778,0,0.2
+10k,10000,text,"Once upon a time  
+Barbie it's magic!  
+Fairy tales unwind  
+We're new but classic  
+Adventures in your mind  
+We'll have the best time now  
+Once upon a time!",3,3.895,256.76,0.0,0.5834,0.1111,0.0769,102.656,9.74,0.0,0.5267,0.1111,0.0769,778,0,0.2
+10k,10000,text,"I have no more to give you  
+I have no room to share  
+I know the road I follow going nowhere",1,5.438,183.9,0.0039,0.8885,0.2222,0.0182,52.731,18.96,0.0,0.3867,0.1111,0.0091,660,0,0.2
+10k,10000,text,"I have no more to give you  
+I have no room to share  
+I know the road I follow going nowhere",2,4.768,209.73,0.0,0.8885,0.2222,0.0182,48.484,20.63,0.0,0.3867,0.1111,0.0091,660,0,0.2
+10k,10000,text,"I have no more to give you  
+I have no room to share  
+I know the road I follow going nowhere",3,4.768,209.74,0.0,0.8885,0.2222,0.0182,49.499,20.2,0.0,0.3867,0.1111,0.0091,660,0,0.2

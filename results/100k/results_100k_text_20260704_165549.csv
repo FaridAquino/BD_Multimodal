@@ -1,0 +1,70 @@
+scale,real_chunks,modality,query,run,lado_a_latencia_ms,lado_a_qps,lado_a_ram_delta_mb,lado_a_mem_pico_mb,lado_a_precision,lado_a_recall,lado_b_latencia_ms,lado_b_qps,lado_b_ram_delta_mb,lado_b_mem_pico_mb,lado_b_precision,lado_b_recall,lado_b_io_shared_hit,lado_b_io_shared_read,overlap_at_k
+100k,100000,text,No,1,0.92,1086.96,0.0234,0.2322,0.0,0.0,26.494,37.74,0.0117,0.0047,0.0,0.0,0,0,0.0
+100k,100000,text,No,2,1.274,785.05,0.0234,0.2322,0.0,0.0,2.431,411.39,0.0078,0.0046,0.0,0.0,0,0,0.0
+100k,100000,text,No,3,0.697,1434.93,0.0195,0.2322,0.0,0.0,2.319,431.18,0.0039,0.0045,0.0,0.0,0,0,0.0
+100k,100000,text,"Fill my life  
+Till now  
+No one's been able to show me how  
+To fill my life like you  
+You are the woman who taught me to",1,62.57,15.98,4.9648,5.436,0.0,0.0,113.697,8.8,2.3711,5.6489,0.0,0.0,7270,0,0.1
+100k,100000,text,"Fill my life  
+Till now  
+No one's been able to show me how  
+To fill my life like you  
+You are the woman who taught me to",2,69.369,14.42,3.9492,5.436,0.0,0.0,89.537,11.17,2.5195,5.6489,0.0,0.0,7270,0,0.1
+100k,100000,text,"Fill my life  
+Till now  
+No one's been able to show me how  
+To fill my life like you  
+You are the woman who taught me to",3,138.044,7.24,5.2031,5.436,0.0,0.0,91.991,10.87,2.25,5.6492,0.0,0.0,7270,0,0.1
+100k,100000,text,"I gotta believe it's worth it  
+Without a victory,  
+I'm so sanctified and free  
+Well maybe I'm just mistaken",1,41.632,24.02,3.2617,3.6695,0.0,0.0,92.185,10.85,0.3555,5.4637,0.0,0.0,7141,0,0.1
+100k,100000,text,"I gotta believe it's worth it  
+Without a victory,  
+I'm so sanctified and free  
+Well maybe I'm just mistaken",2,52.885,18.91,3.2852,3.6695,0.0,0.0,98.678,10.13,1.4609,5.4637,0.0,0.0,7141,0,0.1
+100k,100000,text,"I gotta believe it's worth it  
+Without a victory,  
+I'm so sanctified and free  
+Well maybe I'm just mistaken",3,32.683,30.6,3.25,3.6695,0.0,0.0,93.742,10.67,1.3984,5.4637,0.0,0.0,7141,0,0.1
+100k,100000,text,"And if your songs be classics,  
+Throw them to the hurd.  
+Truth is where they came from  
+And not this theatre of the absurd.  
+Some say you wanted to play for me  
+But it's only what you've heard  
+",1,160.203,6.24,5.1055,5.4598,0.0,0.0,138.277,7.23,0.9805,5.5829,0.0,0.0,7067,0,0.1
+100k,100000,text,"And if your songs be classics,  
+Throw them to the hurd.  
+Truth is where they came from  
+And not this theatre of the absurd.  
+Some say you wanted to play for me  
+But it's only what you've heard  
+",2,74.743,13.38,5.668,5.4598,0.0,0.0,1086.075,0.92,2.125,5.5824,0.0,0.0,7067,0,0.1
+100k,100000,text,"And if your songs be classics,  
+Throw them to the hurd.  
+Truth is where they came from  
+And not this theatre of the absurd.  
+Some say you wanted to play for me  
+But it's only what you've heard  
+",3,63.221,15.82,5.3906,5.4598,0.0,0.0,941.807,1.06,1.4688,5.6893,0.0,0.0,7067,0,0.1
+100k,100000,text,"[Verse 1]  
+Starts in 1135, when king Henry, my father, died,  
+And I think you'll find named me, Matilda, as his heir.  
+But his nephew, Stephen, said  
+That crown should be upon my head!  
+I'm a man",1,78.172,12.79,5.6758,6.5006,0.2222,0.1176,1630.29,0.61,6.3203,7.9907,0.0,0.0,7504,0,0.1
+100k,100000,text,"[Verse 1]  
+Starts in 1135, when king Henry, my father, died,  
+And I think you'll find named me, Matilda, as his heir.  
+But his nephew, Stephen, said  
+That crown should be upon my head!  
+I'm a man",2,81.293,12.3,4.4766,6.5006,0.2222,0.1176,1619.698,0.62,2.6992,7.9907,0.0,0.0,7504,0,0.1
+100k,100000,text,"[Verse 1]  
+Starts in 1135, when king Henry, my father, died,  
+And I think you'll find named me, Matilda, as his heir.  
+But his nephew, Stephen, said  
+That crown should be upon my head!  
+I'm a man",3,77.329,12.93,4.7539,6.5007,0.2222,0.1176,1618.974,0.62,4.0078,7.9907,0.0,0.0,7504,0,0.1

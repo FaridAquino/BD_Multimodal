@@ -1,0 +1,15 @@
+INFO:     Started server process [76708]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:39123 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39127 - "POST /music/search_audio?side=B&k=3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:16545 - "POST /visual/search?side=A&k=3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:16548 - "POST /visual/search?side=B&k=3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38224 - "POST /music/search_audio?side=A&k=3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9998 - "POST /music/search_audio?side=A&k=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:20356 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5744 - "POST /music/search_audio?side=A&k=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1510 - "POST /music/search_audio?side=A&k=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64966 - "POST /music/search_audio?side=A&k=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7281 - "POST /music/search_audio?side=A&k=10 HTTP/1.1" 200 OK

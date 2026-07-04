@@ -1,0 +1,82 @@
+Tablas vaciadas (truncate).
+Pasada 1: 170 canciones, 1033 chunks (estrofas).
+Codebook entrenado (id=1, 2501 términos) -> models\text\codebook_text.json
+codewords_text: 2501 términos con IDF (N=1033).
+Pasada 2: insertados 1033 chunks (+ histogramas + tsv).
+Imágenes candidatas: 112 | rejilla 3x3 | k=256 | presupuesto de chunks: sin límite
+Etiquetas de styles.csv: 44446 productos (articleType).
+Pasada 1: 112 imágenes, 552136 descriptores SIFT para entrenamiento (70.6s).
+Codebook entrenado (id=2, 256 visual words) -> models\image\codebook_image.npy
+
+=== REPORTE DE INGESTA (imagen) ===
+Tiempo pasada 2       : 1.71 min
+Imágenes insertadas   : 112
+Imágenes ilegibles    : 0
+Chunks insertados     : 1008
+   -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
+Codebook registrado (id=3, 256 acoustic words).
+Géneros FMA cargados: 49598 tracks (genre_top).
+Canciones a ingestar: 26 | presupuesto de chunks: sin límite
+
+[1/26] 000002... OK
+[2/26] 000005... OK
+[3/26] 000010... OK
+[4/26] 000140... OK
+[5/26] 000141... OK
+[6/26] 000148... OK
+[7/26] 000182... OK
+[8/26] 000190... OK
+[9/26] 000193... OK
+[10/26] 000194... OK
+[11/26] 000197... OK
+[12/26] 000200... OK
+[13/26] 000203... OK
+[14/26] 000204... OK
+[15/26] 000207... OK
+[16/26] 000210... OK
+[17/26] 000211... OK
+[18/26] 000212... OK
+[19/26] 000213... OK
+[20/26] 000255... OK
+[21/26] 000256... OK
+[22/26] 000368... OK
+[23/26] 000424... OK
+[24/26] 000459... OK
+[25/26] 000534... OK
+[26/26] Ma_Meilleure_Ennemie... OK
+
+=== REPORTE DE INGESTA (audio) ===
+Tiempo total          : 0.28 min
+Canciones con éxito   : 26
+Canciones con error   : 0
+Chunks insertados     : 613
+Construyendo índice (text) del codebook id=1...
+
+--- ÍNDICE CONSTRUIDO ---
+Chunks indexados     : 1033
+Términos/visual words: 2501
+Postings totales     : 15624
+Tiempo de build      : 94.3 ms
+Tiempo de guardado   : 4.9 ms
+Tamaño en disco      : 0.19 MB
+Guardado en          : models\text\index_text.pkl
+Construyendo índice (image) del codebook id=2...
+
+--- ÍNDICE CONSTRUIDO ---
+Chunks indexados     : 1008
+Términos/visual words: 256
+Postings totales     : 79790
+Tiempo de build      : 66.0 ms
+Tiempo de guardado   : 22.1 ms
+Tamaño en disco      : 1.08 MB
+Guardado en          : models\image\index_image.pkl
+Construyendo índice (audio) del codebook id=3...
+
+--- ÍNDICE CONSTRUIDO ---
+Chunks indexados     : 26
+Términos/visual words: 154
+Postings totales     : 323
+Tiempo de build      : 5.8 ms
+Tiempo de guardado   : 0.8 ms
+Tamaño en disco      : 0.01 MB
+Guardado en          : models\audio\index_audio.pkl
