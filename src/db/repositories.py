@@ -87,10 +87,10 @@ def get_sources_metadata(source_ids: Sequence[str]) -> dict[str, dict]:
         return {}
     with get_conn() as conn:
         rows = conn.execute(
-            "SELECT id, metadata FROM sources WHERE id = ANY(%s)",
+            "SELECT id, uri, metadata FROM sources WHERE id = ANY(%s)",
             (list(source_ids),),
         ).fetchall()
-    return {sid: (meta or {}) for sid, meta in rows}
+    return {str(sid): {"uri": uri, "metadata": meta, **(meta or {})} for sid, uri, meta in rows}
 
 
 def insert_embeddings_image(rows: Iterable[tuple[int, int, str, "np.ndarray"]]) -> None:

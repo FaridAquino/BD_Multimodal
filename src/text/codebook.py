@@ -43,7 +43,7 @@ class TopKCodebookBuilder(CodebookBuilder):
     def __init__(self, k: int = 5000):
         self.k = k
 
-    def build(self, descriptors: Sequence[Descriptor]) -> Codebook:
+    def build(self, descriptors: Sequence[Descriptor]) -> LinguisticCodebook:
         freq: Counter[str] = Counter()
         for desc in descriptors:
             freq.update(desc.vector)

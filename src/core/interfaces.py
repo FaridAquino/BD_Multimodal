@@ -51,6 +51,11 @@ class Codebook(ABC):
     def encode(self, descriptor: Descriptor) -> Histogram:
         raise NotImplementedError
 
+    @abstractmethod
+    def save(self, path: str) -> None:
+        """Persiste el codebook entrenado en disco."""
+        raise NotImplementedError
+
 
 class CodebookBuilder(ABC):
     """Entrena el codebook a partir de TODOS los descriptores de la colección

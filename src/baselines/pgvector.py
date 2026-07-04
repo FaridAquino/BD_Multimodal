@@ -5,9 +5,39 @@ Almacena los MISMOS histogramas como vectores y busca por similitud con `<->`.
 """
 from __future__ import annotations
 
+from pgvector.psycopg import register_vector
 from src.core import SearchResult
+from src.db.connection import get_conn
 
 
 def search_vector(modality: str, query_vec, k: int = 10) -> list[SearchResult]:
-    # TODO: SELECT ... ORDER BY embedding <-> %s::vector LIMIT k
-    raise NotImplementedError
+    # 1. Definir la dimensión correcta según la modalidad (= k del codebook)
+    if modality == "audio":
+        dim = 256
+    else:
+        dim = 256
+
+    # 2. Convertimos el diccionario sparse a un vector denso usando la variable 'dim'
+    dense_vector = [0.0] * dim
+    for cw, count in query_vec.counts.items():
+        idx = int(cw)
+        if 0 <= idx < dim:  # <--- Cambiamos el 512 por dim aquí también
+            dense_vector[idx] = float(count)
+
+    # Conectamos a la BD usando el patrón del repositorio
+    with get_conn() as conn:
+        register_vector(conn)
+        table_name = f"embeddings_{modality}"
+        
+        query = f"""
+            SELECT chunk_id, source_id, 1 - (embedding <=> %s::vector) AS score
+            FROM {table_name}
+            ORDER BY embedding <=> %s::vector
+            LIMIT %s
+        """
+        rows = conn.execute(query, (dense_vector, dense_vector, k)).fetchall()
+        
+    return [
+        SearchResult(chunk_id=str(row[0]), source_id=str(row[1]), score=float(row[2]))
+        for row in rows
+    ]
