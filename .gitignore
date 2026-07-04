@@ -8,6 +8,9 @@ venv/
 # Entorno
 .env
 
+# Salida de herramientas y skills (no se versiona)
+outputs/
+
 # Datos (no se versionan; se descargan con scripts/download_data.sh)
 data/raw/
 data/processed/
