@@ -7,10 +7,10 @@ Universidad de Ingenieria y Tecnologia (UTEC), 2026-1
 
 **Equipo:**
 - Farid Aquino -- Tech Lead, Arquitectura e Infraestructura
-- [Ing. Texto] -- Modulo de Texto
-- [Vasco2510] -- Modulo de Imagenes
-- [ChRi5-PT] -- Modulo de Audio
-- [J-D-Rosales] -- Backend y Evaluacion
+- [Ing. Texto - Piero Pilco] -- Modulo de Texto
+- [Vasco2510 -- Abel Escobar Perez] -- Modulo de Imagenes
+- [ChRi5-PT -- Christian Perez] -- Modulo de Audio
+- [J-D-Rosales -- Daniel Rosales ] -- Backend y Evaluacion
 
 ## 1. Descripcion del sistema y arquitectura
 
