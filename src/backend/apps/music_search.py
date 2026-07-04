@@ -21,7 +21,7 @@ from src.db import repositories as repo
 
 from src.audio.splitter import SlidingWindowSplitter
 from src.audio.extractor import MfccExtractor
-from src.audio.codebook import AcousticCodebook, KMeansAcousticBuilder
+from src.audio.codebook import AcousticCodebook
 from src.audio.index import AcousticInvertedIndex
 
 router = APIRouter()
