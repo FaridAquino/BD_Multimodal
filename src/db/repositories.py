@@ -104,6 +104,24 @@ def get_sources_metadata(source_ids: Sequence[str]) -> dict[str, dict]:
     return {str(sid): {"uri": uri, "metadata": meta, **(meta or {})} for sid, uri, meta in rows}
 
 
+def get_lyrics(source_ids: Sequence[str]) -> dict[str, str]:
+    """Letra completa por canción: concatena los chunks de texto en orden.
+
+    Nota: si la ingesta cortó por --max-chunks, la letra puede estar incompleta
+    (solo las estrofas que entraron en el presupuesto).
+    """
+    if not source_ids:
+        return {}
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT source_id, string_agg(payload, E'\n\n' ORDER BY position) "
+            "FROM chunks WHERE modality = 'text' AND source_id = ANY(%s) "
+            "GROUP BY source_id",
+            (list(source_ids),),
+        ).fetchall()
+    return {str(sid): letra for sid, letra in rows if letra}
+
+
 def insert_embeddings_image(rows: Iterable[tuple[int, int, str, "np.ndarray"]]) -> None:
     with get_conn() as conn:
         register_vector(conn)

@@ -1,23 +1,19 @@
 """Frontend Streamlit — Búsqueda Multimodal (paleta de colores fríos pastel)."""
-import io
 import os
 from urllib.parse import urlparse
 
-import librosa
 import requests
-import soundfile as sf
 import streamlit as st
 from PIL import Image
 
 API_URL = "http://localhost:8000"
-REQUEST_TIMEOUT = 30
+# La canción completa tarda más en procesarse (ventaneo + MFCC de todo el mp3).
+REQUEST_TIMEOUT = 120
 DEFAULT_K = 10
 MAX_K = 50
 
-# Fragmentos estilo Shazam: nunca se envía la canción completa al backend.
-FRAG_MIN_S = 3
-FRAG_MAX_S = 15
-FRAG_DEFAULT_S = 8
+# La canción se envía COMPLETA y sin re-muestrear (igual que scripts.probe_query_audio):
+# cualquier recorte o cambio de sample rate altera los MFCC y degrada el ranking.
 
 VISUAL_SIDE_OPTIONS = {
     "Lado A: Índice invertido propio": "A",
@@ -39,7 +35,7 @@ MORADO = "#AC96D4"
 TINTA = "#33415E"
 FONDO = "#F4F9FC"
 
-st.set_page_config(page_title="Búsqueda Multimodal", page_icon="🌊", layout="wide")
+st.set_page_config(page_title="Búsqueda Multimodal", page_icon="🗄️", layout="wide")
 
 st.markdown(
     f"""
@@ -158,19 +154,31 @@ def load_image_from_url_or_path(image_ref):
     return None
 
 
-@st.cache_data(show_spinner=False, max_entries=4)
-def decodificar_audio(data: bytes):
-    """Decodifica el archivo subido a PCM mono 22.05 kHz (cacheado por bytes)."""
-    y, sr = librosa.load(io.BytesIO(data), sr=22050, mono=True)
-    return y, sr
+def cargar_audio_resultado(uri):
+    """Devuelve algo reproducible por st.audio a partir del uri del resultado.
 
-
-def fragmento_wav(y, sr, inicio_s: float, dur_s: float) -> bytes:
-    """Recorta [inicio, inicio+dur] y lo serializa como WAV en memoria."""
-    seg = y[int(inicio_s * sr): int((inicio_s + dur_s) * sr)]
-    buf = io.BytesIO()
-    sf.write(buf, seg, sr, format="WAV")
-    return buf.getvalue()
+    - URL http(s): se devuelve tal cual (Streamlit la reproduce en streaming).
+    - Ruta local (absoluta o relativa a la raíz del proyecto): se leen los bytes.
+    Devuelve None si el uri no existe o no es un archivo de audio.
+    """
+    if not uri:
+        return None
+    parsed = urlparse(uri)
+    if parsed.scheme in ("http", "https"):
+        return uri
+    candidatos = [uri]
+    if not os.path.isabs(uri):
+        # frontend/app.py -> raíz del proyecto (por si el cwd no es la raíz)
+        raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        candidatos.append(os.path.join(raiz, uri))
+    for ruta in candidatos:
+        if os.path.isfile(ruta):
+            try:
+                with open(ruta, "rb") as fh:
+                    return fh.read()
+            except OSError:
+                return None
+    return None
 
 
 # ── Renderizado de resultados ────────────────────────────────────────────────
@@ -204,7 +212,7 @@ def display_visual_results(results):
                 )
 
 
-def display_music_results(results):
+def display_music_results(results, playable_audio=False):
     if not results:
         st.info("No se encontraron resultados para esa búsqueda.")
         return
@@ -233,6 +241,19 @@ def display_music_results(results):
                     f"{score:.4f}" if isinstance(score, (int, float)) else "N/A",
                 )
             st.progress(score_fraction(result.get("score")))
+            if playable_audio:
+                audio = cargar_audio_resultado(result.get("uri"))
+                if audio is not None:
+                    st.audio(audio)
+                else:
+                    st.caption("Audio no disponible para reproducir.")
+            lyrics = result.get("lyrics")
+            if lyrics:
+                with st.expander("Ver letra"):
+                    st.text(lyrics)
+                    uri = result.get("uri")
+                    if uri and uri.startswith(("http://", "https://")):
+                        st.markdown(f"[Video de la musica]({uri})")
 
 
 # ── Pestañas ─────────────────────────────────────────────────────────────────
@@ -295,11 +316,11 @@ with tab2:
     st.write("Busca canciones por letra o identifica una canción con un fragmento de audio.")
 
     search_type = st.radio(
-        "Tipo de búsqueda:", ["Letra (texto)", "Fragmento (audio)"], horizontal=True
+        "Tipo de búsqueda:", ["Letra (texto)", "Canción (audio)"], horizontal=True
     )
 
     query_text = ""
-    fragmento_bytes = None
+    audio_file = None
 
     if search_type == "Letra (texto)":
         query_text = st.text_input(
@@ -307,57 +328,14 @@ with tab2:
             placeholder="Ej. Is this the real life? Is this just fantasy?",
         )
     else:
-        # ── Modo Shazam: solo se envía un fragmento corto de la canción ──
-        st.markdown(
-            f'<span class="chip chip-agua">Modo Shazam</span>&nbsp;'
-            f'<span style="color:{TINTA};opacity:.75;">elige un fragmento de '
-            f"{FRAG_MIN_S}–{FRAG_MAX_S} segundos; nunca se envía la canción completa</span>",
-            unsafe_allow_html=True,
-        )
+        # La canción se envía completa y sin modificar, igual que el probe en
+        # consola — así el ranking del frontend es idéntico al de python.
         audio_file = st.file_uploader(
             "Sube una canción (.wav, .mp3, .ogg)",
             type=["wav", "mp3", "ogg"],
         )
         if audio_file is not None:
-            try:
-                y, sr = decodificar_audio(audio_file.getvalue())
-            except Exception as exc:
-                st.error(f"No se pudo decodificar el audio: {exc}")
-                y, sr = None, None
-
-            if y is not None:
-                dur_total = len(y) / sr
-                if dur_total < FRAG_MIN_S:
-                    st.warning(
-                        f"El audio dura {dur_total:.1f}s; se necesita al menos {FRAG_MIN_S}s."
-                    )
-                else:
-                    with st.container(border=True):
-                        c1, c2 = st.columns(2)
-                        with c1:
-                            dur_frag = st.slider(
-                                "Duración del fragmento (s):",
-                                min_value=FRAG_MIN_S,
-                                max_value=min(FRAG_MAX_S, int(dur_total)),
-                                value=min(FRAG_DEFAULT_S, int(dur_total)),
-                                key="frag_dur",
-                            )
-                        with c2:
-                            max_inicio = max(dur_total - dur_frag, 0.0)
-                            inicio = st.slider(
-                                "Inicio del fragmento (s):",
-                                min_value=0.0,
-                                max_value=float(max(max_inicio, 0.1)),
-                                value=min(float(max_inicio) / 2, float(max_inicio)),
-                                step=0.5,
-                                key="frag_inicio",
-                            )
-                        fragmento_bytes = fragmento_wav(y, sr, inicio, dur_frag)
-                        st.caption(
-                            f"Fragmento seleccionado: {inicio:.1f}s → {inicio + dur_frag:.1f}s "
-                            f"(de {dur_total:.1f}s totales)"
-                        )
-                        st.audio(fragmento_bytes, format="audio/wav")
+            st.audio(audio_file.getvalue())
 
     col1, col2 = st.columns(2)
     with col1:
@@ -382,8 +360,8 @@ with tab2:
     if search_music_btn:
         if search_type == "Letra (texto)" and not query_text.strip():
             st.warning("Por favor, ingresa al menos una palabra para buscar.")
-        elif search_type == "Fragmento (audio)" and fragmento_bytes is None:
-            st.warning("Sube una canción y selecciona un fragmento antes de buscar.")
+        elif search_type == "Canción (audio)" and audio_file is None:
+            st.warning("Sube una canción antes de buscar.")
         else:
             st.divider()
             with st.spinner("Buscando coincidencias en la base de datos..."):
@@ -395,13 +373,19 @@ with tab2:
                     params["q"] = query_text
                     response = call_api("GET", "/music/search", params=params)
                 else:
-                    files = {"file": ("fragmento.wav", fragmento_bytes, "audio/wav")}
+                    # Garantizado por la validación del elif de arriba.
+                    assert audio_file is not None
+                    files = {"file": (audio_file.name, audio_file.getvalue(),
+                                      audio_file.type or "audio/mpeg")}
                     response = call_api("POST", "/music/search_audio", params=params, files=files)
 
                 if response is None:
                     st.stop()
 
                 if response.status_code == 200:
-                    display_music_results(response.json().get("results", []))
+                    display_music_results(
+                        response.json().get("results", []),
+                        playable_audio=(search_type == "Canción (audio)"),
+                    )
                 else:
                     st.error(f"Error en la API ({response.status_code}): {response.text}")

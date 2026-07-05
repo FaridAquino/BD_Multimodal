@@ -12,7 +12,7 @@
 -- ---------- TEXTO: full-text con GIN sobre tsvector ----------
 CREATE INDEX idx_chunks_tsv_gin ON chunks USING gin (tsv);
 -- Comparar GIN vs GiST (lo pide el enunciado):
--- CREATE INDEX idx_chunks_tsv_gist ON chunks USING gist (tsv);
+CREATE INDEX idx_chunks_tsv_gist ON chunks USING gist (tsv);
 
 -- ---------- IMAGEN: pgvector HNSW ----------
 CREATE INDEX idx_emb_image_hnsw

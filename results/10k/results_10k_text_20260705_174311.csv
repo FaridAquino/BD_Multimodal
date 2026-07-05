@@ -1,0 +1,67 @@
+scale,real_chunks,modality,query,run,lado_a_latencia_ms,lado_a_qps,lado_a_ram_delta_mb,lado_a_mem_pico_mb,lado_a_io_reads,lado_a_io_read_mb,lado_a_io_load_mb,lado_a_index_mb,lado_a_precision,lado_a_recall,lado_a_rr,lado_b_latencia_ms,lado_b_qps,lado_b_ram_delta_mb,lado_b_mem_pico_mb,lado_b_precision,lado_b_recall,lado_b_rr,lado_b_io_shared_hit,lado_b_io_shared_read,lado_b_gist_latencia_ms,lado_b_gist_qps,lado_b_gist_ram_delta_mb,lado_b_gist_mem_pico_mb,lado_b_gist_io_shared_hit,lado_b_gist_io_shared_read,lado_b_gist_rr,overlap_at_k
+10k,10000,text,"And the fire I feel for the  
+Woman I love  
+Is driving me insane  
+Knowing she's waiting  
+And I just can't get there  
+Lord only knows that I've  
+Racked my brain  
+To try and find a way  
+To see th",1,20.358,49.12,1.4336,1.4562,0,0.0,1.7447,1.672,0.1111,0.0175,1.0,38.346,26.08,0.0039,0.0037,0.0,0.0,1.0,789,0,24.118,41.46,0.0,0.0036,789,0,1.0,0.1
+10k,10000,text,"And the fire I feel for the  
+Woman I love  
+Is driving me insane  
+Knowing she's waiting  
+And I just can't get there  
+Lord only knows that I've  
+Racked my brain  
+To try and find a way  
+To see th",2,13.578,73.65,1.2266,1.4562,0,0.0,1.7447,1.672,0.1111,0.0175,1.0,22.491,44.46,0.0,0.0036,0.0,0.0,1.0,789,0,23.798,42.02,0.0,0.0035,789,0,1.0,0.1
+10k,10000,text,"And the fire I feel for the  
+Woman I love  
+Is driving me insane  
+Knowing she's waiting  
+And I just can't get there  
+Lord only knows that I've  
+Racked my brain  
+To try and find a way  
+To see th",3,23.065,43.36,1.0156,1.4562,0,0.0,1.7447,1.672,0.1111,0.0175,1.0,30.614,32.66,0.0,0.0035,0.0,0.0,1.0,789,0,26.565,37.64,0.0,0.0034,789,0,1.0,0.1
+10k,10000,text,"Raindrops on a window pane  
+Stillness of a summer rain  
+Silently the haze drifts through the trees  
+Slowly dawn is breaking through  
+Yet a morning without you",1,6.9,144.93,0.0,0.4754,0,0.0,1.7447,1.672,0.0,0.0,1.0,6.534,153.05,0.0,0.0034,0.1111,0.0089,1.0,586,0,12.533,79.79,0.0,0.0034,757,0,1.0,0.1
+10k,10000,text,"Raindrops on a window pane  
+Stillness of a summer rain  
+Silently the haze drifts through the trees  
+Slowly dawn is breaking through  
+Yet a morning without you",2,12.158,82.25,0.0,0.4754,0,0.0,1.7447,1.672,0.0,0.0,1.0,9.676,103.35,0.0,0.0034,0.1111,0.0089,1.0,586,0,11.855,84.35,0.0,0.0034,757,0,1.0,0.1
+10k,10000,text,"Raindrops on a window pane  
+Stillness of a summer rain  
+Silently the haze drifts through the trees  
+Slowly dawn is breaking through  
+Yet a morning without you",3,5.106,195.84,0.0,0.4754,0,0.0,1.7447,1.672,0.0,0.0,1.0,7.83,127.71,0.0,0.0034,0.1111,0.0089,1.0,586,0,12.36,80.9,0.0,0.0034,757,0,1.0,0.1
+10k,10000,text,"Battle, Battle, Battle  
+Battle Someone. . .oooh",1,1.687,592.7,0.0,0.2136,0,0.0,1.7447,1.672,0.0,0.0,1.0,2.963,337.52,0.0,0.0033,0.0,0.0,1.0,203,0,3.326,300.7,0.0,0.0033,327,0,1.0,0.3
+10k,10000,text,"Battle, Battle, Battle  
+Battle Someone. . .oooh",2,1.019,980.97,0.0,0.2136,0,0.0,1.7447,1.672,0.0,0.0,1.0,2.608,383.39,0.0,0.0033,0.0,0.0,1.0,203,0,3.763,265.77,0.0,0.0033,327,0,1.0,0.3
+10k,10000,text,"Battle, Battle, Battle  
+Battle Someone. . .oooh",3,1.137,879.28,0.0,0.2136,0,0.0,1.7447,1.672,0.0,0.0,1.0,2.096,477.14,0.0,0.0033,0.0,0.0,1.0,203,0,3.45,289.88,0.0,0.0033,327,0,1.0,0.3
+10k,10000,text,"But over in a land that's in my back yard  
+There's a people who succeed, they don't try hard",1,4.918,203.35,0.0,0.6749,0,0.0,1.7447,1.672,0.1111,0.0238,1.0,4.276,233.85,0.0,0.0034,0.0,0.0,1.0,587,0,7.091,141.03,0.0,0.0033,772,0,1.0,0.1
+10k,10000,text,"But over in a land that's in my back yard  
+There's a people who succeed, they don't try hard",2,13.682,73.09,0.0,0.6749,0,0.0,1.7447,1.672,0.1111,0.0238,1.0,8.295,120.55,0.0,0.0034,0.0,0.0,1.0,587,0,11.677,85.64,0.0,0.0033,772,0,1.0,0.1
+10k,10000,text,"But over in a land that's in my back yard  
+There's a people who succeed, they don't try hard",3,16.561,60.38,0.0,0.6749,0,0.0,1.7447,1.672,0.1111,0.0238,1.0,4.226,236.65,0.0,0.0034,0.0,0.0,1.0,587,0,6.608,151.32,0.0,0.0033,772,0,1.0,0.1
+10k,10000,text,"Oh, little Jack Frost get lost, get lost,  
+Little Jack Frost get lost  
+You know you don't do a thing  
+But put a bite on the toes",1,11.149,89.69,0.0,1.0426,0,0.0,1.7447,1.672,0.0,0.0,1.0,10.138,98.64,0.0,0.0034,0.0,0.0,1.0,680,0,15.374,65.05,0.0,0.0034,865,0,1.0,0.1
+10k,10000,text,"Oh, little Jack Frost get lost, get lost,  
+Little Jack Frost get lost  
+You know you don't do a thing  
+But put a bite on the toes",2,8.008,124.87,0.0039,1.0426,0,0.0,1.7447,1.672,0.0,0.0,1.0,10.562,94.68,0.0,0.0034,0.0,0.0,1.0,680,0,15.082,66.31,0.0,0.0034,865,0,1.0,0.1
+10k,10000,text,"Oh, little Jack Frost get lost, get lost,  
+Little Jack Frost get lost  
+You know you don't do a thing  
+But put a bite on the toes",3,8.462,118.17,0.0039,1.0426,0,0.0,1.7447,1.672,0.0,0.0,1.0,10.311,96.99,0.0,0.0034,0.0,0.0,1.0,680,0,16.84,59.38,0.0,0.0034,865,0,1.0,0.1

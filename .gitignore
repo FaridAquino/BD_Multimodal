@@ -29,6 +29,5 @@ results/raw/
 # build_index sobre data/samples/ (ver README).
 models/
 
-data
-
 pruebas/
+add_song.py

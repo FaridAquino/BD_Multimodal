@@ -91,14 +91,29 @@ def _encode_text_query(codebook: LinguisticCodebook, q: str) -> Histogram:
             merged[cw] = merged.get(cw, 0) + c
     return Histogram(chunk_id="query", source_id="query", counts=merged)
 
-def _encode_audio_query(codebook: AcousticCodebook, path: str) -> Histogram:
+def _audio_window_hists(codebook: AcousticCodebook, path: str) -> list[Histogram]:
+    """Un histograma por ventana de la consulta (para votación estilo Shazam).
+
+    A diferencia de _encode_audio_query (que fusiona todo en un histograma),
+    aquí cada ventana queda separada para que vote individualmente — mismo
+    esquema que scripts.probe_query_audio en ambos lados.
+    """
     chunks = _audio_splitter().split(path, source_id="query")
     descs = _AUDIO_EXTRACTOR.extract(chunks)
-    merged: dict[int, int] = {}
-    for d in descs:
-        for cw, c in codebook.encode(d).counts.items():
-            merged[cw] = merged.get(cw, 0) + c
-    return Histogram(chunk_id="query", source_id="query", counts=merged)
+    return [h for h in (codebook.encode(d) for d in descs) if h.counts]
+
+
+def _encode_audio_windows(codebook: AcousticCodebook, path: str) -> list:
+    """Un vector denso por ventana de la consulta (para votación en Lado B)."""
+    import numpy as np
+    dim = codebook.size
+    vecs = []
+    for h in _audio_window_hists(codebook, path):
+        vec = np.zeros(dim, dtype=np.float32)
+        for cw, c in h.counts.items():
+            vec[int(cw)] = c
+        vecs.append(vec)
+    return vecs
 
 def _aggregate_by_source(results) -> list[tuple[str, float]]:
     acc: dict[str, float] = defaultdict(float)
@@ -135,9 +150,20 @@ def _enrich(ranked: list[tuple[str, float]]) -> list[dict]:
             "artist": m.get("artist") or m.get("genre") or "Desconocido",
             "song": m.get("song") or (f"FMA track {fma_id}" if fma_id else "Desconocida"),
             "genre": m.get("genre"),
+            # uri: para audio es la ruta del mp3 (el frontend lo reproduce);
+            # para texto es el link a la letra.
+            "uri": m.get("uri"),
             "score": round(float(score), 6),
         })
     return out
+
+def _con_letra(results: list[dict]) -> list[dict]:
+    """Adjunta la letra (chunks de texto concatenados) a cada resultado."""
+    letras = repo.get_lyrics([r["source_id"] for r in results])
+    for r in results:
+        r["lyrics"] = letras.get(r["source_id"])
+    return results
+
 
 @router.get("/search")
 def search_music_text(
@@ -152,11 +178,11 @@ def search_music_text(
             return {"side": "A", "query": q, "results": []}
         raw = index.search(query_hist, k=k * 10)
         ranked = _aggregate_by_source(raw)[:k]
-        return {"side": "A", "query": q, "results": _enrich(ranked)}
+        return {"side": "A", "query": q, "results": _con_letra(_enrich(ranked))}
 
     results = gin_gist.search_fulltext_aggregated(q, k=k)
     ranked = [(r.source_id, r.score) for r in results]
-    return {"side": "B", "query": q, "results": _enrich(ranked)}
+    return {"side": "B", "query": q, "results": _con_letra(_enrich(ranked))}
 
 @router.post("/search_audio")
 async def search_music_audio(
@@ -171,22 +197,32 @@ async def search_music_audio(
     try:
         if side == "A":
             codebook, index = _load_audio_lado_a()
-            query_hist = _encode_audio_query(codebook, tmp_path)
-            if not query_hist.counts:
+            # Votación por ventana (como scripts.probe_query_audio): cada ventana
+            # busca en el índice y suma su coseno a las canciones que devuelve.
+            # El puntaje es el acumulado de votos, no un coseno acotado a [0,1].
+            hists = _audio_window_hists(codebook, tmp_path)
+            if not hists:
                 return {"side": "A", "query": file.filename, "results": []}
-            raw = index.search(query_hist, k=k * 10)
-            ranked = _aggregate_by_source(raw)[:k]
+            puntajes: dict[str, float] = defaultdict(float)
+            for h in hists:
+                for r in index.search(h, k=10):
+                    puntajes[r.source_id] += r.score
+            ranked = sorted(puntajes.items(), key=lambda x: x[1], reverse=True)[:k]
             return {"side": "A", "query": file.filename, "results": _enrich(ranked)}
 
         codebook, _ = _load_audio_lado_a()
-        query_hist = _encode_audio_query(codebook, tmp_path)
-        
+        # Lado B por VOTACIÓN de ventanas (como scripts.probe_query_audio): cada
+        # ventana de la consulta hace su propio kNN en pgvector y vota. Evita los
+        # empates degenerados del MAX-coseno sobre chunks 1-hot.
+        qvecs = _encode_audio_windows(codebook, tmp_path)
+        if not qvecs:
+            return {"side": "B", "query": file.filename, "results": []}
         try:
-            results = pgvector.search_vector("audio", query_hist, k=k)
+            results = pgvector.search_vector_voting("audio", qvecs, k=k)
             ranked = [(r.source_id, r.score) for r in results]
         except NotImplementedError:
             ranked = []
-            
+
         return {"side": "B", "query": file.filename, "results": _enrich(ranked)}
     finally:
         os.remove(tmp_path)

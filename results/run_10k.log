@@ -5,16 +5,16 @@ codewords_text: 5000 términos con IDF (N=10000).
 Pasada 2: insertados 10000 chunks (+ histogramas + tsv).
 Imágenes candidatas: 1167 | rejilla 3x3 | k=256 | presupuesto de chunks: 10000
 Etiquetas de styles.csv: 44446 productos (articleType).
-Pasada 1: 189 imágenes, 1004727 descriptores SIFT para entrenamiento (93.7s).
+Pasada 1: 189 imágenes, 1004727 descriptores SIFT para entrenamiento (109.5s).
 Codebook entrenado (id=2, 256 visual words) -> models\image\codebook_image.npy
-  [200 imgs] 1800 chunks | 11 chunks/s | ETA 12.8 min
-  [400 imgs] 3600 chunks | 11 chunks/s | ETA 10.1 min
-  [600 imgs] 5400 chunks | 11 chunks/s | ETA 7.3 min
-  [800 imgs] 7200 chunks | 10 chunks/s | ETA 4.5 min
-  [1000 imgs] 9000 chunks | 10 chunks/s | ETA 1.6 min
+  [200 imgs] 1800 chunks | 10 chunks/s | ETA 14.0 min
+  [400 imgs] 3600 chunks | 10 chunks/s | ETA 11.2 min
+  [600 imgs] 5400 chunks | 9 chunks/s | ETA 8.1 min
+  [800 imgs] 7200 chunks | 9 chunks/s | ETA 5.0 min
+  [1000 imgs] 9000 chunks | 9 chunks/s | ETA 1.8 min
 
 === REPORTE DE INGESTA (imagen) ===
-Tiempo pasada 2       : 15.91 min
+Tiempo pasada 2       : 17.79 min
 Imágenes insertadas   : 1112
 Imágenes ilegibles    : 0
 Chunks insertados     : 10000
@@ -527,7 +527,7 @@ Canciones a ingestar: 8000 | presupuesto de chunks: 10000
 Presupuesto de chunks alcanzado (10000).
 
 === REPORTE DE INGESTA (audio) ===
-Tiempo total          : 4.09 min
+Tiempo total          : 4.13 min
 Canciones con éxito   : 500
 Canciones con error   : 0
 Chunks insertados     : 10000
@@ -537,8 +537,8 @@ Construyendo índice (text) del codebook id=1...
 Chunks indexados     : 10000
 Términos/visual words: 5000
 Postings totales     : 128472
-Tiempo de build      : 769.3 ms
-Tiempo de guardado   : 50.8 ms
+Tiempo de build      : 790.7 ms
+Tiempo de guardado   : 48.9 ms
 Tamaño en disco      : 1.67 MB
 Guardado en          : models\text\index_text.pkl
 Construyendo índice (image) del codebook id=2...
@@ -547,8 +547,8 @@ Construyendo índice (image) del codebook id=2...
 Chunks indexados     : 10000
 Términos/visual words: 256
 Postings totales     : 1003169
-Tiempo de build      : 681.0 ms
-Tiempo de guardado   : 358.5 ms
+Tiempo de build      : 934.9 ms
+Tiempo de guardado   : 418.0 ms
 Tamaño en disco      : 13.62 MB
 Guardado en          : models\image\index_image.pkl
 Construyendo índice (audio) del codebook id=3...
@@ -557,210 +557,221 @@ Construyendo índice (audio) del codebook id=3...
 Chunks indexados     : 500
 Términos/visual words: 240
 Postings totales     : 5059
-Tiempo de build      : 48.4 ms
-Tiempo de guardado   : 1.3 ms
+Tiempo de build      : 56.0 ms
+Tiempo de guardado   : 2.3 ms
 Tamaño en disco      : 0.09 MB
 Guardado en          : models\audio\index_audio.pkl
 [INFO] Chunks de 'text' en la BD: 10000 (escala declarada: 10k = 10000)
 [INFO] Etiquetas de relevancia: 1721 sources, 44 clases.
 [INFO] --queries vacío. Muestreando 5 consultas de la BD...
-[INFO] Consultas seleccionadas: ['Oo ooo oooo oooo ooo ooo ooo  \nHush  \nHush  \nHushabye  \nOo ooo oooo oooo ooo ooo ooo  \nHush  \nHush  \nHushabye  \nOo ooo oooo oooo ooo ooo ooo', "One of these days you'll be sorry  \nToo many houses on the stilt  \nThree million years or just a story  \nFour on the floor up to the hilt", "Just take a look at this number  \nIt's got that certain swing  \nThat makes you wanna sing", "Once upon a time  \nBarbie it's magic!  \nFairy tales unwind  \nWe're new but classic  \nAdventures in your mind  \nWe'll have the best time now  \nOnce upon a time!", 'I have no more to give you  \nI have no room to share  \nI know the road I follow going nowhere']
+[INFO] Consultas seleccionadas: ["And the fire I feel for the  \nWoman I love  \nIs driving me insane  \nKnowing she's waiting  \nAnd I just can't get there  \nLord only knows that I've  \nRacked my brain  \nTo try and find a way  \nTo see th", 'Raindrops on a window pane  \nStillness of a summer rain  \nSilently the haze drifts through the trees  \nSlowly dawn is breaking through  \nYet a morning without you', 'Battle, Battle, Battle  \nBattle Someone. . .oooh', "But over in a land that's in my back yard  \nThere's a people who succeed, they don't try hard", "Oh, little Jack Frost get lost, get lost,  \nLittle Jack Frost get lost  \nYou know you don't do a thing  \nBut put a bite on the toes"]
 
 [INFO] Iniciando evaluación: 15 ejecuciones (5 consultas × 3 runs)
-[INFO] Resultados ? results\10k\results_10k_text_20260704_120603.csv
+[INFO] Resultados ? results\10k\results_10k_text_20260705_174311.csv
 
-  ? [TEXT] run=1 | q='Oo ooo oooo oooo ooo ooo ooo  \nHush  \nHush  \nHushabye  \nOo o'
-     Lado A: 0.8 ms | Lado B: 11.0 ms | P@10 A/B: 0.67/0.67 | overlap: 80.00%
-  ? [TEXT] run=2 | q='Oo ooo oooo oooo ooo ooo ooo  \nHush  \nHush  \nHushabye  \nOo o'
-     Lado A: 0.8 ms | Lado B: 3.7 ms | P@10 A/B: 0.67/0.67 | overlap: 80.00%
-  ? [TEXT] run=3 | q='Oo ooo oooo oooo ooo ooo ooo  \nHush  \nHush  \nHushabye  \nOo o'
-     Lado A: 0.6 ms | Lado B: 3.4 ms | P@10 A/B: 0.67/0.67 | overlap: 80.00%
-  ? [TEXT] run=1 | q="One of these days you'll be sorry  \nToo many houses on the s"
-     Lado A: 3.6 ms | Lado B: 11.0 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
-  ? [TEXT] run=2 | q="One of these days you'll be sorry  \nToo many houses on the s"
-     Lado A: 4.0 ms | Lado B: 12.3 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
-  ? [TEXT] run=3 | q="One of these days you'll be sorry  \nToo many houses on the s"
-     Lado A: 3.8 ms | Lado B: 10.6 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
-  ? [TEXT] run=1 | q="Just take a look at this number  \nIt's got that certain swin"
-     Lado A: 4.5 ms | Lado B: 9.4 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
-  ? [TEXT] run=2 | q="Just take a look at this number  \nIt's got that certain swin"
-     Lado A: 4.6 ms | Lado B: 9.7 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
-  ? [TEXT] run=3 | q="Just take a look at this number  \nIt's got that certain swin"
-     Lado A: 5.5 ms | Lado B: 10.3 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
-  ? [TEXT] run=1 | q="Once upon a time  \nBarbie it's magic!  \nFairy tales unwind  "
-     Lado A: 3.1 ms | Lado B: 18.9 ms | P@10 A/B: 0.11/0.11 | overlap: 20.00%
-  ? [TEXT] run=2 | q="Once upon a time  \nBarbie it's magic!  \nFairy tales unwind  "
-     Lado A: 2.7 ms | Lado B: 101.0 ms | P@10 A/B: 0.11/0.11 | overlap: 20.00%
-  ? [TEXT] run=3 | q="Once upon a time  \nBarbie it's magic!  \nFairy tales unwind  "
-     Lado A: 3.9 ms | Lado B: 102.7 ms | P@10 A/B: 0.11/0.11 | overlap: 20.00%
-  ? [TEXT] run=1 | q='I have no more to give you  \nI have no room to share  \nI kno'
-     Lado A: 5.4 ms | Lado B: 52.7 ms | P@10 A/B: 0.22/0.11 | overlap: 20.00%
-  ? [TEXT] run=2 | q='I have no more to give you  \nI have no room to share  \nI kno'
-     Lado A: 4.8 ms | Lado B: 48.5 ms | P@10 A/B: 0.22/0.11 | overlap: 20.00%
-  ? [TEXT] run=3 | q='I have no more to give you  \nI have no room to share  \nI kno'
-     Lado A: 4.8 ms | Lado B: 49.5 ms | P@10 A/B: 0.22/0.11 | overlap: 20.00%
+  ? [TEXT] run=1 | q='And the fire I feel for the  \nWoman I love  \nIs driving me i'
+     [VERIFICACIÓN] Índices usados por el Lado B (EXPLAIN): {'gin': ['idx_chunks_modality'], 'gist': ['idx_chunks_modality']}
+     Lado A: 20.4 ms | Lado B: 38.3 ms | P@10 A/B: 0.11/0.00 | RR A/B: 1.00/1.00 | overlap: 10.00%
+  ? [TEXT] run=2 | q='And the fire I feel for the  \nWoman I love  \nIs driving me i'
+     Lado A: 13.6 ms | Lado B: 22.5 ms | P@10 A/B: 0.11/0.00 | RR A/B: 1.00/1.00 | overlap: 10.00%
+  ? [TEXT] run=3 | q='And the fire I feel for the  \nWoman I love  \nIs driving me i'
+     Lado A: 23.1 ms | Lado B: 30.6 ms | P@10 A/B: 0.11/0.00 | RR A/B: 1.00/1.00 | overlap: 10.00%
+  ? [TEXT] run=1 | q='Raindrops on a window pane  \nStillness of a summer rain  \nSi'
+     Lado A: 6.9 ms | Lado B: 6.5 ms | P@10 A/B: 0.00/0.11 | RR A/B: 1.00/1.00 | overlap: 10.00%
+  ? [TEXT] run=2 | q='Raindrops on a window pane  \nStillness of a summer rain  \nSi'
+     Lado A: 12.2 ms | Lado B: 9.7 ms | P@10 A/B: 0.00/0.11 | RR A/B: 1.00/1.00 | overlap: 10.00%
+  ? [TEXT] run=3 | q='Raindrops on a window pane  \nStillness of a summer rain  \nSi'
+     Lado A: 5.1 ms | Lado B: 7.8 ms | P@10 A/B: 0.00/0.11 | RR A/B: 1.00/1.00 | overlap: 10.00%
+  ? [TEXT] run=1 | q='Battle, Battle, Battle  \nBattle Someone. . .oooh'
+     Lado A: 1.7 ms | Lado B: 3.0 ms | P@10 A/B: 0.00/0.00 | RR A/B: 1.00/1.00 | overlap: 30.00%
+  ? [TEXT] run=2 | q='Battle, Battle, Battle  \nBattle Someone. . .oooh'
+     Lado A: 1.0 ms | Lado B: 2.6 ms | P@10 A/B: 0.00/0.00 | RR A/B: 1.00/1.00 | overlap: 30.00%
+  ? [TEXT] run=3 | q='Battle, Battle, Battle  \nBattle Someone. . .oooh'
+     Lado A: 1.1 ms | Lado B: 2.1 ms | P@10 A/B: 0.00/0.00 | RR A/B: 1.00/1.00 | overlap: 30.00%
+  ? [TEXT] run=1 | q="But over in a land that's in my back yard  \nThere's a people"
+     Lado A: 4.9 ms | Lado B: 4.3 ms | P@10 A/B: 0.11/0.00 | RR A/B: 1.00/1.00 | overlap: 10.00%
+  ? [TEXT] run=2 | q="But over in a land that's in my back yard  \nThere's a people"
+     Lado A: 13.7 ms | Lado B: 8.3 ms | P@10 A/B: 0.11/0.00 | RR A/B: 1.00/1.00 | overlap: 10.00%
+  ? [TEXT] run=3 | q="But over in a land that's in my back yard  \nThere's a people"
+     Lado A: 16.6 ms | Lado B: 4.2 ms | P@10 A/B: 0.11/0.00 | RR A/B: 1.00/1.00 | overlap: 10.00%
+  ? [TEXT] run=1 | q='Oh, little Jack Frost get lost, get lost,  \nLittle Jack Fros'
+     Lado A: 11.1 ms | Lado B: 10.1 ms | P@10 A/B: 0.00/0.00 | RR A/B: 1.00/1.00 | overlap: 10.00%
+  ? [TEXT] run=2 | q='Oh, little Jack Frost get lost, get lost,  \nLittle Jack Fros'
+     Lado A: 8.0 ms | Lado B: 10.6 ms | P@10 A/B: 0.00/0.00 | RR A/B: 1.00/1.00 | overlap: 10.00%
+  ? [TEXT] run=3 | q='Oh, little Jack Frost get lost, get lost,  \nLittle Jack Fros'
+     Lado A: 8.5 ms | Lado B: 10.3 ms | P@10 A/B: 0.00/0.00 | RR A/B: 1.00/1.00 | overlap: 10.00%
 
-[OK] CSV guardado en: results\10k\results_10k_text_20260704_120603.csv
+[OK] CSV guardado en: results\10k\results_10k_text_20260705_174311.csv
 
 ?????????????????????? RESUMEN ??????????????????????
   Escala          : 10k (chunks reales: 10000)
   Modalidad       : text
   Consultas totales: 15
 
-  Latencia promedio  Lado A : 3.53 ms
-  Latencia promedio  Lado B : 30.31 ms
-  Throughput prom.   Lado A : 471.33 QPS
-  Throughput prom.   Lado B : 90.72 QPS
-  RAM delta prom.    Lado A : 0.0034 MB
-  RAM delta prom.    Lado B : 0.0021 MB
-  Mem pico prom.     Lado A : 0.6518 MB
-  Mem pico prom.     Lado B : 0.3452 MB
-  IO shared_hit prom Lado B : 579 bloques
+  Latencia promedio  Lado A : 9.85 ms
+  Latencia promedio  Lado B : 11.40 ms
+  Throughput prom.   Lado A : 247.44 QPS
+  Throughput prom.   Lado B : 171.11 QPS
+  RAM delta prom.    Lado A : 0.2456 MB
+  RAM delta prom.    Lado B : 0.0003 MB
+  Mem pico prom.     Lado A : 0.7725 MB
+  Mem pico prom.     Lado B : 0.0034 MB
+  IO búsqueda        Lado A : 0.0000 MB (0 reads) — índice ya en RAM
+  IO carga índice    Lado A : 1.74 MB (índice: 1.67 MB en disco)
+  IO shared_hit prom Lado B : 569 bloques
   IO shared_read pro Lado B : 0 bloques
-  Precision@10 prom.  Lado A : 20.00%
-  Precision@10 prom.  Lado B : 17.78%
-  Recall@10 prom.     Lado A : 3.40%
-  Recall@10 prom.     Lado B : 3.22%
-  Overlap@10 promedio : 28.00%
+  MRR@10 prom.        Lado A : 100.00%
+  MRR@10 prom.        Lado B : 100.00%
+
+  ?? GIN vs GiST (Lado B texto) ??
+  Latencia GIN  : 11.40 ms | GiST: 12.96 ms
+  QPS GIN       : 171.11 | GiST: 119.42
+  MRR@10 GIN     : 100.00% | GiST: 100.00%
+  IO hit/read GIN: 569/0 bloques | GiST: 702/0
+  Overlap@10 promedio : 14.00%
 ?????????????????????????????????????????????????????
 [INFO] Chunks de 'image' en la BD: 10000 (escala declarada: 10k = 10000)
 [INFO] Etiquetas de relevancia: 1112 sources, 35 clases.
 [INFO] --queries vacío. Muestreando 5 consultas de la BD...
-[INFO] Consultas seleccionadas: ['data\\raw\\fashion-dataset\\images\\10016.jpg', 'data\\raw\\fashion-dataset\\images\\10719.jpg', 'data\\raw\\fashion-dataset\\images\\10155.jpg', 'data\\raw\\fashion-dataset\\images\\10587.jpg', 'data\\raw\\fashion-dataset\\images\\10700.jpg']
+[INFO] Consultas seleccionadas: ['data\\raw\\fashion-dataset\\images\\11070.jpg', 'data\\raw\\fashion-dataset\\images\\11023.jpg', 'data\\raw\\fashion-dataset\\images\\10286.jpg', 'data\\raw\\fashion-dataset\\images\\10113.jpg', 'data\\raw\\fashion-dataset\\images\\11169.jpg']
 
 [INFO] Iniciando evaluación: 15 ejecuciones (5 consultas × 3 runs)
-[INFO] Resultados ? results\10k\results_10k_image_20260704_120608.csv
+[INFO] Resultados ? results\10k\results_10k_image_20260705_174318.csv
 
-  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10016.jpg'
-     Lado A: 2662.1 ms | Lado B: 66.4 ms | P@10 A/B: 0.00/0.00 | overlap: 100.00%
-  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10016.jpg'
-     Lado A: 696.9 ms | Lado B: 53.9 ms | P@10 A/B: 0.00/0.00 | overlap: 100.00%
-  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10016.jpg'
-     Lado A: 678.9 ms | Lado B: 56.6 ms | P@10 A/B: 0.00/0.00 | overlap: 100.00%
-  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10719.jpg'
-     Lado A: 212.0 ms | Lado B: 48.8 ms | P@10 A/B: 0.00/0.00 | overlap: 80.00%
-  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10719.jpg'
-     Lado A: 212.8 ms | Lado B: 48.5 ms | P@10 A/B: 0.00/0.00 | overlap: 80.00%
-  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10719.jpg'
-     Lado A: 218.4 ms | Lado B: 55.5 ms | P@10 A/B: 0.00/0.00 | overlap: 80.00%
-  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10155.jpg'
-     Lado A: 280.4 ms | Lado B: 48.4 ms | P@10 A/B: 0.11/0.11 | overlap: 80.00%
-  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10155.jpg'
-     Lado A: 363.2 ms | Lado B: 44.6 ms | P@10 A/B: 0.11/0.11 | overlap: 80.00%
-  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10155.jpg'
-     Lado A: 370.3 ms | Lado B: 44.7 ms | P@10 A/B: 0.11/0.11 | overlap: 80.00%
-  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10587.jpg'
-     Lado A: 719.6 ms | Lado B: 56.3 ms | P@10 A/B: 1.00/1.00 | overlap: 100.00%
-  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10587.jpg'
-     Lado A: 720.9 ms | Lado B: 54.1 ms | P@10 A/B: 1.00/1.00 | overlap: 100.00%
-  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10587.jpg'
-     Lado A: 816.5 ms | Lado B: 56.6 ms | P@10 A/B: 1.00/1.00 | overlap: 100.00%
-  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10700.jpg'
-     Lado A: 483.7 ms | Lado B: 41.2 ms | P@10 A/B: 0.56/0.56 | overlap: 100.00%
-  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10700.jpg'
-     Lado A: 463.1 ms | Lado B: 60.8 ms | P@10 A/B: 0.56/0.56 | overlap: 100.00%
-  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10700.jpg'
-     Lado A: 402.5 ms | Lado B: 43.4 ms | P@10 A/B: 0.56/0.56 | overlap: 100.00%
+  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\11070.jpg'
+     [VERIFICACIÓN] Índices usados por el Lado B (EXPLAIN): {'hnsw': ['idx_emb_image_hnsw']}
+     Lado A: 3423.1 ms | Lado B: 76.6 ms | P@10 A/B: 0.89/0.89 | RR A/B: 0.50/1.00 | overlap: 90.00%
+  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\11070.jpg'
+     Lado A: 1003.7 ms | Lado B: 76.8 ms | P@10 A/B: 0.89/0.89 | RR A/B: 0.50/1.00 | overlap: 90.00%
+  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\11070.jpg'
+     Lado A: 1054.2 ms | Lado B: 71.2 ms | P@10 A/B: 0.89/0.89 | RR A/B: 0.50/1.00 | overlap: 90.00%
+  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\11023.jpg'
+     Lado A: 626.8 ms | Lado B: 61.6 ms | P@10 A/B: 0.56/0.56 | RR A/B: 1.00/1.00 | overlap: 100.00%
+  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\11023.jpg'
+     Lado A: 616.3 ms | Lado B: 67.8 ms | P@10 A/B: 0.56/0.56 | RR A/B: 1.00/1.00 | overlap: 100.00%
+  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\11023.jpg'
+     Lado A: 563.9 ms | Lado B: 61.8 ms | P@10 A/B: 0.56/0.56 | RR A/B: 1.00/1.00 | overlap: 100.00%
+  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10286.jpg'
+     Lado A: 439.4 ms | Lado B: 44.3 ms | P@10 A/B: 0.00/0.00 | RR A/B: 1.00/1.00 | overlap: 100.00%
+  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10286.jpg'
+     Lado A: 531.2 ms | Lado B: 48.2 ms | P@10 A/B: 0.00/0.00 | RR A/B: 1.00/1.00 | overlap: 100.00%
+  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10286.jpg'
+     Lado A: 467.0 ms | Lado B: 42.9 ms | P@10 A/B: 0.00/0.00 | RR A/B: 1.00/1.00 | overlap: 100.00%
+  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\10113.jpg'
+     Lado A: 571.6 ms | Lado B: 53.6 ms | P@10 A/B: 0.22/0.22 | RR A/B: 1.00/1.00 | overlap: 90.00%
+  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\10113.jpg'
+     Lado A: 634.3 ms | Lado B: 51.9 ms | P@10 A/B: 0.22/0.22 | RR A/B: 1.00/1.00 | overlap: 90.00%
+  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\10113.jpg'
+     Lado A: 631.7 ms | Lado B: 50.8 ms | P@10 A/B: 0.22/0.22 | RR A/B: 1.00/1.00 | overlap: 90.00%
+  ? [IMAGE] run=1 | q='data\\raw\\fashion-dataset\\images\\11169.jpg'
+     Lado A: 1321.1 ms | Lado B: 67.2 ms | P@10 A/B: 0.33/0.33 | RR A/B: 1.00/1.00 | overlap: 100.00%
+  ? [IMAGE] run=2 | q='data\\raw\\fashion-dataset\\images\\11169.jpg'
+     Lado A: 1362.0 ms | Lado B: 63.6 ms | P@10 A/B: 0.33/0.33 | RR A/B: 1.00/1.00 | overlap: 100.00%
+  ? [IMAGE] run=3 | q='data\\raw\\fashion-dataset\\images\\11169.jpg'
+     Lado A: 1444.8 ms | Lado B: 71.5 ms | P@10 A/B: 0.33/0.33 | RR A/B: 1.00/1.00 | overlap: 100.00%
 
-[OK] CSV guardado en: results\10k\results_10k_image_20260704_120608.csv
+[OK] CSV guardado en: results\10k\results_10k_image_20260705_174318.csv
 
 ?????????????????????? RESUMEN ??????????????????????
   Escala          : 10k (chunks reales: 10000)
   Modalidad       : image
   Consultas totales: 15
 
-  Latencia promedio  Lado A : 620.08 ms
-  Latencia promedio  Lado B : 51.99 ms
-  Throughput prom.   Lado A : 2.47 QPS
-  Throughput prom.   Lado B : 19.57 QPS
-  RAM delta prom.    Lado A : 4.9232 MB
-  RAM delta prom.    Lado B : 1.8862 MB
-  Mem pico prom.     Lado A : 2.3080 MB
-  Mem pico prom.     Lado B : 0.1112 MB
-  IO shared_hit prom Lado B : 620 bloques
+  Latencia promedio  Lado A : 979.41 ms
+  Latencia promedio  Lado B : 60.65 ms
+  Throughput prom.   Lado A : 1.37 QPS
+  Throughput prom.   Lado B : 17.07 QPS
+  RAM delta prom.    Lado A : 5.0273 MB
+  RAM delta prom.    Lado B : 1.6039 MB
+  Mem pico prom.     Lado A : 2.3193 MB
+  Mem pico prom.     Lado B : 0.1370 MB
+  IO búsqueda        Lado A : 0.0000 MB (0 reads) — índice ya en RAM
+  IO carga índice    Lado A : 13.76 MB (índice: 13.62 MB en disco)
+  IO shared_hit prom Lado B : 495 bloques
   IO shared_read pro Lado B : 0 bloques
-  Precision@10 prom.  Lado A : 33.33%
-  Precision@10 prom.  Lado B : 33.33%
-  Recall@10 prom.     Lado A : 2.33%
-  Recall@10 prom.     Lado B : 2.33%
-  Overlap@10 promedio : 92.00%
+  Precision@10 prom.  Lado A : 40.00%
+  Precision@10 prom.  Lado B : 40.00%
+  Recall@10 prom.     Lado A : 5.88%
+  Recall@10 prom.     Lado B : 5.88%
+  Overlap@10 promedio : 96.00%
 ?????????????????????????????????????????????????????
 [INFO] Chunks de 'audio' en la BD: 10000 (escala declarada: 10k = 10000)
 [INFO] Etiquetas de relevancia: 500 sources, 8 clases.
 [INFO] --queries vacío. Muestreando 5 consultas de la BD...
-[INFO] Consultas seleccionadas: ['data\\raw\\fma_small\\000\\000716.mp3', 'data\\raw\\fma_small\\006\\006610.mp3', 'data\\raw\\fma_small\\004\\004782.mp3', 'data\\raw\\fma_small\\004\\004096.mp3', 'data\\raw\\fma_small\\003\\003840.mp3']
+[INFO] Consultas seleccionadas: ['data\\raw\\fma_small\\001\\001701.mp3', 'data\\raw\\fma_small\\004\\004236.mp3', 'data\\raw\\fma_small\\010\\010441.mp3', 'data\\raw\\fma_small\\001\\001681.mp3', 'data\\raw\\fma_small\\001\\001259.mp3']
 
 [INFO] Iniciando evaluación: 15 ejecuciones (5 consultas × 3 runs)
-[INFO] Resultados ? results\10k\results_10k_audio_20260704_120656.csv
+[INFO] Resultados ? results\10k\results_10k_audio_20260705_174431.csv
 
-  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\000\\000716.mp3'
+  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\001\\001701.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.6 ms | Lado B: 131.3 ms | P@10 A/B: 0.33/0.67 | overlap: 30.00%
-  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\000\\000716.mp3'
+     [VERIFICACIÓN] Índices usados por el Lado B (EXPLAIN): {'hnsw': ['idx_emb_audio_song_hnsw']}
+     Lado A: 0.3 ms | Lado B: 16.7 ms | P@10 A/B: 0.44/0.33 | RR A/B: 1.00/1.00 | overlap: 80.00%
+  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\001\\001701.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.9 ms | Lado B: 127.9 ms | P@10 A/B: 0.33/0.67 | overlap: 30.00%
-  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\000\\000716.mp3'
+     Lado A: 0.3 ms | Lado B: 11.8 ms | P@10 A/B: 0.44/0.33 | RR A/B: 1.00/1.00 | overlap: 80.00%
+  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\001\\001701.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.4 ms | Lado B: 121.7 ms | P@10 A/B: 0.33/0.67 | overlap: 30.00%
-  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\006\\006610.mp3'
+     Lado A: 0.3 ms | Lado B: 9.7 ms | P@10 A/B: 0.44/0.33 | RR A/B: 1.00/1.00 | overlap: 80.00%
+  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\004\\004236.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.8 ms | Lado B: 104.2 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
-  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\006\\006610.mp3'
+     Lado A: 1.4 ms | Lado B: 13.4 ms | P@10 A/B: 0.11/0.11 | RR A/B: 1.00/1.00 | overlap: 60.00%
+  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\004\\004236.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.7 ms | Lado B: 107.3 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
-  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\006\\006610.mp3'
+     Lado A: 0.4 ms | Lado B: 10.2 ms | P@10 A/B: 0.11/0.11 | RR A/B: 1.00/1.00 | overlap: 60.00%
+  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\004\\004236.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.6 ms | Lado B: 144.0 ms | P@10 A/B: 0.00/0.00 | overlap: 10.00%
-  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\004\\004782.mp3'
+     Lado A: 0.3 ms | Lado B: 10.3 ms | P@10 A/B: 0.11/0.11 | RR A/B: 1.00/1.00 | overlap: 60.00%
+  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\010\\010441.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.5 ms | Lado B: 112.1 ms | P@10 A/B: 0.89/0.40 | overlap: 10.00%
-  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\004\\004782.mp3'
+     Lado A: 0.5 ms | Lado B: 8.7 ms | P@10 A/B: 0.33/0.44 | RR A/B: 1.00/1.00 | overlap: 70.00%
+  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\010\\010441.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.4 ms | Lado B: 105.7 ms | P@10 A/B: 0.89/0.40 | overlap: 10.00%
-  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\004\\004782.mp3'
+     Lado A: 0.5 ms | Lado B: 9.1 ms | P@10 A/B: 0.33/0.44 | RR A/B: 1.00/1.00 | overlap: 70.00%
+  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\010\\010441.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.4 ms | Lado B: 105.7 ms | P@10 A/B: 0.89/0.40 | overlap: 10.00%
-  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\004\\004096.mp3'
+     Lado A: 0.5 ms | Lado B: 9.8 ms | P@10 A/B: 0.33/0.44 | RR A/B: 1.00/1.00 | overlap: 70.00%
+  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\001\\001681.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 2.0 ms | Lado B: 106.7 ms | P@10 A/B: 0.67/0.00 | overlap: 10.00%
-  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\004\\004096.mp3'
+     Lado A: 0.5 ms | Lado B: 8.6 ms | P@10 A/B: 0.33/0.22 | RR A/B: 1.00/1.00 | overlap: 50.00%
+  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\001\\001681.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 2.1 ms | Lado B: 111.0 ms | P@10 A/B: 0.67/0.00 | overlap: 10.00%
-  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\004\\004096.mp3'
+     Lado A: 0.9 ms | Lado B: 13.5 ms | P@10 A/B: 0.33/0.22 | RR A/B: 1.00/1.00 | overlap: 50.00%
+  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\001\\001681.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 2.7 ms | Lado B: 121.4 ms | P@10 A/B: 0.67/0.00 | overlap: 10.00%
-  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\003\\003840.mp3'
+     Lado A: 0.5 ms | Lado B: 12.9 ms | P@10 A/B: 0.33/0.22 | RR A/B: 1.00/1.00 | overlap: 50.00%
+  ? [AUDIO] run=1 | q='data\\raw\\fma_small\\001\\001259.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.5 ms | Lado B: 112.9 ms | P@10 A/B: 0.44/0.67 | overlap: 50.00%
-  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\003\\003840.mp3'
+     Lado A: 0.5 ms | Lado B: 10.1 ms | P@10 A/B: 0.11/0.11 | RR A/B: 1.00/1.00 | overlap: 60.00%
+  ? [AUDIO] run=2 | q='data\\raw\\fma_small\\001\\001259.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.2 ms | Lado B: 118.5 ms | P@10 A/B: 0.44/0.67 | overlap: 50.00%
-  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\003\\003840.mp3'
+     Lado A: 0.4 ms | Lado B: 9.0 ms | P@10 A/B: 0.11/0.11 | RR A/B: 1.00/1.00 | overlap: 60.00%
+  ? [AUDIO] run=3 | q='data\\raw\\fma_small\\001\\001259.mp3'
    -> Cargando modelo K-Means global desde models\audio\kmeans_256_fma.joblib
-     Lado A: 1.1 ms | Lado B: 108.9 ms | P@10 A/B: 0.44/0.67 | overlap: 50.00%
+     Lado A: 0.5 ms | Lado B: 9.5 ms | P@10 A/B: 0.11/0.11 | RR A/B: 1.00/1.00 | overlap: 60.00%
 
-[OK] CSV guardado en: results\10k\results_10k_audio_20260704_120656.csv
+[OK] CSV guardado en: results\10k\results_10k_audio_20260705_174431.csv
 
 ?????????????????????? RESUMEN ??????????????????????
   Escala          : 10k (chunks reales: 10000)
   Modalidad       : audio
   Consultas totales: 15
 
-  Latencia promedio  Lado A : 1.66 ms
-  Latencia promedio  Lado B : 115.96 ms
-  Throughput prom.   Lado A : 628.43 QPS
-  Throughput prom.   Lado B : 8.69 QPS
-  RAM delta prom.    Lado A : 0.0078 MB
-  RAM delta prom.    Lado B : 0.0023 MB
-  Mem pico prom.     Lado A : 0.0522 MB
-  Mem pico prom.     Lado B : 0.1123 MB
-  IO shared_hit prom Lado B : 1429 bloques
+  Latencia promedio  Lado A : 0.52 ms
+  Latencia promedio  Lado B : 10.89 ms
+  Throughput prom.   Lado A : 2348.36 QPS
+  Throughput prom.   Lado B : 95.17 QPS
+  RAM delta prom.    Lado A : 0.0081 MB
+  RAM delta prom.    Lado B : 0.0013 MB
+  Mem pico prom.     Lado A : 0.0652 MB
+  Mem pico prom.     Lado B : 0.0635 MB
+  IO búsqueda        Lado A : 0.0000 MB (0 reads) — índice ya en RAM
+  IO carga índice    Lado A : 0.36 MB (índice: 0.09 MB en disco)
+  IO shared_hit prom Lado B : 328 bloques
   IO shared_read pro Lado B : 0 bloques
-  Precision@10 prom.  Lado A : 46.67%
-  Precision@10 prom.  Lado B : 34.67%
-  Recall@10 prom.     Lado A : 4.42%
-  Recall@10 prom.     Lado B : 3.18%
-  Overlap@10 promedio : 22.00%
+  MRR@10 prom.        Lado A : 100.00%
+  MRR@10 prom.        Lado B : 100.00%
+  Overlap@10 promedio : 64.00%
 ?????????????????????????????????????????????????????
 
 ########## ESCALA 10k (10000 chunks x 3 modalidad(es)) ##########
@@ -770,21 +781,21 @@ Guardado en          : models\audio\index_audio.pkl
     D:\multimodal-search\.venv\Scripts\python.exe -m scripts.ingest --modality text --max-chunks 10000 --truncate
 ======================================================================
 
-[OK] Ingesta text (10k) completada en 7.8 min.
+[OK] Ingesta text (10k) completada en 7.6 min.
 
 ======================================================================
 >>> Ingesta image (10k)
     D:\multimodal-search\.venv\Scripts\python.exe -m scripts.ingest --modality image --max-chunks 10000 --limit 999999 --sample 200000
 ======================================================================
 
-[OK] Ingesta image (10k) completada en 17.8 min.
+[OK] Ingesta image (10k) completada en 19.9 min.
 
 ======================================================================
 >>> Ingesta audio (10k)
     D:\multimodal-search\.venv\Scripts\python.exe -m scripts.ingest --modality audio --max-chunks 10000 --limit 999999 --hop-ms 1500
 ======================================================================
 
-[OK] Ingesta audio (10k) completada en 4.2 min.
+[OK] Ingesta audio (10k) completada en 4.3 min.
 
 ======================================================================
 >>> Índice invertido text
@@ -805,7 +816,7 @@ Guardado en          : models\audio\index_audio.pkl
     D:\multimodal-search\.venv\Scripts\python.exe -m scripts.build_index --modality audio
 ======================================================================
 
-[OK] Índice invertido audio completada en 0.0 min.
+[OK] Índice invertido audio completada en 0.1 min.
 
 ======================================================================
 >>> Evaluación text (10k)
@@ -819,7 +830,7 @@ Guardado en          : models\audio\index_audio.pkl
     D:\multimodal-search\.venv\Scripts\python.exe -m scripts.evaluate_performance --modality image --scale 10k --k 10 --runs 3 --n_queries 5 --output results/10k
 ======================================================================
 
-[OK] Evaluación image (10k) completada en 0.8 min.
+[OK] Evaluación image (10k) completada en 1.2 min.
 
 ======================================================================
 >>> Evaluación audio (10k)
@@ -828,5 +839,5 @@ Guardado en          : models\audio\index_audio.pkl
 
 [OK] Evaluación audio (10k) completada en 0.2 min.
 
-########## ESCALA 10k COMPLETA en 31.1 min ##########
+########## ESCALA 10k COMPLETA en 33.5 min ##########
 CSVs en: results/10k/  ?  genera gráficos con: python -m scripts.plot_results

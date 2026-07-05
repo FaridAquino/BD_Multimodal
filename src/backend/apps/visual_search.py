@@ -37,21 +37,28 @@ def _load_lado_a() -> tuple[VisualCodebook, VisualInvertedIndex]:
     return VisualCodebook.from_file(str(_CODEBOOK_PATH)), VisualInvertedIndex.load(str(_INDEX_PATH))
 
 
-def _encode_query(codebook: VisualCodebook, img: np.ndarray) -> Histogram:
+def _patch_hists(codebook: VisualCodebook, img: np.ndarray) -> list[Histogram]:
+    """Un histograma por patch de la consulta (para votación por patch).
+
+    Igual que scripts.probe_query_image: cada patch vota individualmente en
+    lugar de fusionar toda la imagen en un solo histograma — así la API da
+    los mismos puntajes que el probe.
+    """
     chunks = _SPLITTER.split(img, source_id="query")
     descs = _EXTRACTOR.extract(chunks)
-    merged: dict[int, int] = {}
-    for d in descs:
-        for cw, c in codebook.encode(d).counts.items():
-            merged[cw] = merged.get(cw, 0) + c
-    return Histogram(chunk_id="query", source_id="query", counts=merged)
+    return [h for h in (codebook.encode(d) for d in descs) if h.counts]
 
 
-def _aggregate_by_source(results) -> list[tuple[str, float]]:
-    acc: dict[str, float] = defaultdict(float)
-    for r in results:
-        acc[r.source_id] = max(acc[r.source_id], r.score)
-    return sorted(acc.items(), key=lambda x: x[1], reverse=True)
+def _patch_vectors(codebook: VisualCodebook, hists: list[Histogram]) -> list[np.ndarray]:
+    """Convierte los histogramas por patch a vectores densos (para pgvector)."""
+    dim = codebook.size
+    vecs = []
+    for h in hists:
+        vec = np.zeros(dim, dtype=np.float32)
+        for cw, c in h.counts.items():
+            vec[int(cw)] = c
+        vecs.append(vec)
+    return vecs
 
 
 def _enrich(ranked: list[tuple[str, float]]) -> list[dict]:
@@ -94,21 +101,30 @@ async def search_by_image(
 
     if side == "A":
         codebook, index = _load_lado_a()
-        query_hist = _encode_query(codebook, img)
-        if not query_hist.counts:
+        # Votación por patch (como scripts.probe_query_image): cada patch busca
+        # en el índice y suma su coseno a las imágenes que devuelve. El puntaje
+        # es el acumulado de votos, no un coseno acotado a [0,1].
+        hists = _patch_hists(codebook, img)
+        if not hists:
             return {"side": "A", "query": file.filename, "results": []}
-        raw = index.search(query_hist, k=k * 10)
-        ranked = _aggregate_by_source(raw)[:k]
+        puntajes: dict[str, float] = defaultdict(float)
+        for h in hists:
+            for r in index.search(h, k=10):
+                puntajes[r.source_id] += r.score
+        ranked = sorted(puntajes.items(), key=lambda x: x[1], reverse=True)[:k]
         return {"side": "A", "query": file.filename, "results": _enrich(ranked)}
 
-    # Lado B
-    codebook, _ = _load_lado_a() 
-    query_hist = _encode_query(codebook, img)
-    
+    # Lado B: votación por patch en pgvector (mismo esquema que el probe).
+    codebook, _ = _load_lado_a()
+    hists = _patch_hists(codebook, img)
+    if not hists:
+        return {"side": "B", "query": file.filename, "results": []}
     try:
-        results = pgvector.search_vector("image", query_hist, k=k)
+        results = pgvector.search_vector_voting(
+            "image", _patch_vectors(codebook, hists), k=k
+        )
         ranked = [(r.source_id, r.score) for r in results]
     except NotImplementedError:
         ranked = []
-        
+
     return {"side": "B", "query": file.filename, "results": _enrich(ranked)}

@@ -31,10 +31,11 @@ ORDEN_ESCALAS = ["1k", "10k", "100k"]
 PATRON = re.compile(r"results_(1k|10k|100k)_(text|image|audio)_(\d{8}_\d{6})\.csv")
 
 # Nombre legible del Lado B según la modalidad
-LADO_B = {"text": "GIN (Postgres)", "image": "pgvector", "audio": "pgvector"}
+LADO_B = {"text": "GIN (Postgres)", "image": "pgvector (HNSW)", "audio": "pgvector (HNSW)"}
+LADO_B_GIST = "GiST (Postgres)"
 LADO_A = "Índice invertido"
 
-COLOR_A, COLOR_B = "#1f77b4", "#d62728"
+COLOR_A, COLOR_B, COLOR_GIST = "#1f77b4", "#d62728", "#9467bd"
 
 
 def cargar(input_dir: Path) -> pd.DataFrame:
@@ -60,6 +61,8 @@ def cargar(input_dir: Path) -> pd.DataFrame:
 
 def _promedios(df: pd.DataFrame, columna: str) -> pd.Series:
     """Promedio por escala (ignora vacíos y centinelas -1), ordenado 1k→100k."""
+    if columna not in df.columns:
+        return pd.Series(dtype=float)
     d = df.copy()
     d[columna] = pd.to_numeric(d[columna], errors="coerce")
     d = d[d[columna].notna() & (d[columna] != -1)]
@@ -76,15 +79,18 @@ def _guardar(fig, out_dir: Path, nombre: str) -> None:
 
 
 def graficar_lineas(df, mod, out_dir, col_a, col_b, titulo, ylabel, nombre,
-                    log_y=False):
+                    log_y=False, col_gist=None):
     serie_a, serie_b = _promedios(df, col_a), _promedios(df, col_b)
-    if serie_a.empty and serie_b.empty:
+    serie_g = _promedios(df, col_gist) if col_gist else pd.Series(dtype=float)
+    if serie_a.empty and serie_b.empty and serie_g.empty:
         return
     fig, ax = plt.subplots(figsize=(7, 4.5))
     if not serie_a.empty:
         ax.plot(serie_a.index, serie_a.values, "o-", color=COLOR_A, label=LADO_A)
     if not serie_b.empty:
         ax.plot(serie_b.index, serie_b.values, "s--", color=COLOR_B, label=LADO_B[mod])
+    if not serie_g.empty:
+        ax.plot(serie_g.index, serie_g.values, "^:", color=COLOR_GIST, label=LADO_B_GIST)
     if log_y:
         ax.set_yscale("log")
     ax.set_xlabel("Escala (chunks)")
@@ -93,6 +99,35 @@ def graficar_lineas(df, mod, out_dir, col_a, col_b, titulo, ylabel, nombre,
     ax.grid(True, alpha=0.3)
     ax.legend()
     _guardar(fig, out_dir, nombre)
+
+
+def graficar_mrr(df, mod, out_dir):
+    """MRR@k (promedio de 1/rank del primer resultado relevante) por sistema
+    y escala. Métrica de calidad principal para texto y audio."""
+    metricas = [("lado_a_rr", f"MRR {LADO_A}", COLOR_A),
+                ("lado_b_rr", f"MRR {LADO_B[mod]}", COLOR_B)]
+    if mod == "text":
+        metricas.append(("lado_b_gist_rr", f"MRR {LADO_B_GIST}", COLOR_GIST))
+    series = {t: _promedios(df, c) for c, t, _ in metricas}
+    if all(s.empty for s in series.values()):
+        print(f"  [AVISO] {mod}: sin datos de MRR (¿CSV viejo sin columnas rr?)")
+        return
+    escalas = [e for e in ORDEN_ESCALAS if any(e in s.index for s in series.values())]
+    x = np.arange(len(escalas))
+    ancho = 0.8 / len(metricas)
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    for i, (col, titulo, color) in enumerate(metricas):
+        vals = [series[titulo].get(e, np.nan) for e in escalas]
+        ax.bar(x + (i - (len(metricas) - 1) / 2) * ancho, vals, ancho,
+               label=titulo, color=color)
+    ax.set_xticks(x, escalas)
+    ax.set_xlabel("Escala (chunks)")
+    ax.set_ylabel("MRR (1/rank promedio)")
+    ax.set_ylim(0, 1.05)
+    ax.set_title(f"MRR@k — {mod}")
+    ax.grid(True, axis="y", alpha=0.3)
+    ax.legend(fontsize=8)
+    _guardar(fig, out_dir, f"mrr_{mod}.png")
 
 
 def graficar_precision_recall(df, mod, out_dir):
@@ -198,12 +233,19 @@ def main() -> None:
     for mod in df["modality"].dropna().unique():
         sub = df[df["modality"] == mod]
         print(f"\n[{mod.upper()}] escalas presentes: {sorted(sub['scale'].unique())}")
+        col_gist_lat = "lado_b_gist_latencia_ms" if mod == "text" else None
+        col_gist_qps = "lado_b_gist_qps" if mod == "text" else None
         graficar_lineas(sub, mod, out_dir, "lado_a_latencia_ms", "lado_b_latencia_ms",
-                        "Latencia promedio", "ms", f"latencia_{mod}.png", log_y=True)
+                        "Latencia promedio", "ms", f"latencia_{mod}.png", log_y=True,
+                        col_gist=col_gist_lat)
         graficar_lineas(sub, mod, out_dir, "lado_a_qps", "lado_b_qps",
                         "Throughput promedio", "consultas/segundo",
-                        f"throughput_{mod}.png", log_y=True)
-        graficar_precision_recall(sub, mod, out_dir)
+                        f"throughput_{mod}.png", log_y=True, col_gist=col_gist_qps)
+        # Imagen: precision/recall. Texto y audio: MRR como métrica de calidad.
+        if mod == "image":
+            graficar_precision_recall(sub, mod, out_dir)
+        else:
+            graficar_mrr(sub, mod, out_dir)
         graficar_memoria(sub, mod, out_dir)
         graficar_io(sub, mod, out_dir)
 

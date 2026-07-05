@@ -147,6 +147,23 @@ def _overlap_at_k(top_a: list[str], top_b: list[str]) -> float:
     return round(len(comunes) / len(top_b), 4)
 
 
+def _reciprocal_rank(top: list[str], query_sid: str | None, k: int) -> float | str:
+    """RR = 1/rank del documento ORIGINAL de la consulta (known-item search).
+
+    La consulta es el mismo audio ingestado (o un recorte) / un fragmento de
+    un texto ingestado, así que el único resultado relevante es su propio
+    source: rank 1 -> 1.0, rank 2 -> 0.5, ... ; 0.0 si el source original no
+    aparece en el top-k. El promedio sobre consultas es el MRR. Devuelve ""
+    si la consulta no proviene de un documento conocido de la BD.
+    """
+    if not query_sid:
+        return ""
+    for rank, sid in enumerate(top[:k], start=1):
+        if sid == query_sid:
+            return round(1.0 / rank, 4)
+    return 0.0
+
+
 def _precision_recall(top: list[str], query_sid: str | None, query_label: str | None,
                       labels: dict[str, str], total_por_label: dict[str, int],
                       k: int) -> tuple[float | str, float | str]:
@@ -171,11 +188,22 @@ def _precision_recall(top: list[str], query_sid: str | None, query_label: str | 
     return precision, recall
 
 
-def _explain_buffers(sql: str, params: tuple, conn) -> dict[str, int]:
+def _indices_del_plan(plan: dict) -> list[str]:
+    """Recorre el plan de EXPLAIN y junta los 'Index Name' usados (verificación
+    de que el Lado B realmente pasa por GIN/GiST/HNSW y no por un seq scan)."""
+    nombres = []
+    if "Index Name" in plan:
+        nombres.append(plan["Index Name"])
+    for hijo in plan.get("Plans", []):
+        nombres.extend(_indices_del_plan(hijo))
+    return nombres
+
+
+def _explain_buffers(sql: str, params: tuple, conn) -> dict:
     """
     Ejecuta EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) sobre la consulta dada y
-    extrae 'Shared Hit Blocks' y 'Shared Read Blocks' del plan.
-    Retorna {"shared_hit": N, "shared_read": N}.
+    extrae 'Shared Hit Blocks', 'Shared Read Blocks' y los índices usados.
+    Retorna {"shared_hit": N, "shared_read": N, "indices": [...]}.
     """
     plan_sql = f"EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {sql}"
     try:
@@ -184,9 +212,10 @@ def _explain_buffers(sql: str, params: tuple, conn) -> dict[str, int]:
         return {
             "shared_hit":  plan.get("Shared Hit Blocks", 0),
             "shared_read": plan.get("Shared Read Blocks", 0),
+            "indices":     _indices_del_plan(plan),
         }
     except Exception:
-        return {"shared_hit": -1, "shared_read": -1}
+        return {"shared_hit": -1, "shared_read": -1, "indices": []}
 
 
 # ╔══════════════════════════════════════════════════════════════════════════╗
@@ -228,29 +257,33 @@ def evaluar_texto(query: str, k: int) -> dict:
 
     top_a, ms_a, ram_a, pico_a, io_reads_a, io_mb_a = _medir(lado_a)
 
-    # ── Lado B (GIN) ─────────────────────────────────────────────────────
-    def lado_b():
-        res = gin_gist.search_fulltext_aggregated(query, k=k)
-        return [r.source_id for r in res]
+    # ── Lado B (GIN y GiST por separado) ─────────────────────────────────
+    # Cada índice se mide en una sesión que fuerza su uso (se DROPea el índice
+    # rival dentro de una transacción con rollback y se apaga el seq scan),
+    # para que la comparación GIN vs GiST sea válida a cualquier escala.
+    def _medir_indice(indice: str):
+        with gin_gist.sesion_indice_forzado(indice) as conn:
+            def lado_b():
+                rows = conn.execute(
+                    gin_gist.SQL_FULLTEXT_AGGREGATED, (query, k)).fetchall()
+                return [str(sid) for sid, _ in rows]
 
-    top_b, ms_b, ram_b, pico_b, _, _ = _medir(lado_b)
+            top, ms, ram, pico, _, _ = _medir(lado_b)
+            io = _explain_buffers(gin_gist.SQL_FULLTEXT_AGGREGATED, (query, k), conn)
+        return top, ms, ram, pico, io
 
-    # ── I/O Postgres (GIN fulltext search, misma query OR que gin_gist) ──
-    io_b = {"shared_hit": -1, "shared_read": -1}
-    try:
-        with get_conn() as conn:
-            sql = (
-                "SELECT source_id, ts_rank(tsv, tq.q) AS score "
-                "FROM chunks, (SELECT replace(plainto_tsquery('english', %s)::text, "
-                "'&', '|')::tsquery AS q) tq "
-                "WHERE tsv @@ tq.q AND modality = 'text' "
-                "ORDER BY score DESC LIMIT %s"
-            )
-            io_b = _explain_buffers(sql, (query, k), conn)
-    except Exception:
-        pass
+    top_b,  ms_b,  ram_b,  pico_b,  io_b  = _medir_indice("gin")
+    top_b2, ms_b2, ram_b2, pico_b2, io_b2 = _medir_indice("gist")
 
     return {
+        "lado_b_gist_latencia_ms": round(ms_b2, 3),
+        "lado_b_gist_qps":         round(1000 / ms_b2, 2) if ms_b2 > 0 else 0,
+        "lado_b_gist_ram_delta_mb": round(ram_b2, 4),
+        "lado_b_gist_mem_pico_mb": round(pico_b2, 4),
+        "lado_b_gist_io_shared_hit":  io_b2["shared_hit"],
+        "lado_b_gist_io_shared_read": io_b2["shared_read"],
+        "top_b_gist":          top_b2[:k],
+        "indices_b":           {"gin": io_b["indices"], "gist": io_b2["indices"]},
         "query":             query,
         "lado_a_latencia_ms": round(ms_a, 3),
         "lado_a_qps":         round(1000 / ms_a, 2) if ms_a > 0 else 0,
@@ -327,37 +360,44 @@ def evaluar_imagen(img_path: str, k: int) -> dict:
         puntajes: dict[str, float] = defaultdict(float)
         with get_conn() as conn:
             register_vector(conn)
-            for d in descs:
-                h = codebook.encode(d)
-                qvec = _counts_a_vec(h.counts, dim)
-                if qvec.sum() == 0:
-                    continue
-                rows = conn.execute(
-                    "SELECT source_id, embedding <=> %s AS dist "
-                    "FROM embeddings_image ORDER BY dist LIMIT %s",
-                    (qvec, k),
-                ).fetchall()
-                for sid, dist in rows:
-                    puntajes[str(sid)] += 1.0 - float(dist)
+            with conn.transaction():
+                # Forzar el índice HNSW también a escalas chicas, donde el
+                # planner preferiría un seq scan (comparación índice vs índice).
+                conn.execute("SET LOCAL enable_seqscan = off")
+                for d in descs:
+                    h = codebook.encode(d)
+                    qvec = _counts_a_vec(h.counts, dim)
+                    if qvec.sum() == 0:
+                        continue
+                    rows = conn.execute(
+                        "SELECT source_id, embedding <=> %s AS dist "
+                        "FROM embeddings_image ORDER BY dist LIMIT %s",
+                        (qvec, k),
+                    ).fetchall()
+                    for sid, dist in rows:
+                        puntajes[str(sid)] += 1.0 - float(dist)
         return sorted(puntajes, key=puntajes.__getitem__, reverse=True)[:k]
 
     top_b, ms_b, ram_b, pico_b, _, _ = _medir(lado_b)
 
     # ── I/O Postgres ──────────────────────────────────────────────────────
-    io_b = {"shared_hit": -1, "shared_read": -1}
+    io_b = {"shared_hit": -1, "shared_read": -1, "indices": []}
     if descs:
         h0 = codebook.encode(descs[0])
         qvec0 = _counts_a_vec(h0.counts, dim)
         try:
             with get_conn() as conn:
                 register_vector(conn)
-                sql = ("SELECT source_id, embedding <=> %s AS dist "
-                       "FROM embeddings_image ORDER BY dist LIMIT %s")
-                io_b = _explain_buffers(sql, (qvec0, k), conn)
+                with conn.transaction():
+                    conn.execute("SET LOCAL enable_seqscan = off")
+                    sql = ("SELECT source_id, embedding <=> %s AS dist "
+                           "FROM embeddings_image ORDER BY dist LIMIT %s")
+                    io_b = _explain_buffers(sql, (qvec0, k), conn)
         except Exception:
             pass
 
     return {
+        "indices_b":          {"hnsw": io_b["indices"]},
         "query":              img_path,
         "lado_a_latencia_ms": round(ms_a, 3),
         "lado_a_qps":         round(1000 / ms_a, 2) if ms_a > 0 else 0,
@@ -383,6 +423,39 @@ def evaluar_imagen(img_path: str, k: int) -> dict:
 # ║  MODALIDAD: AUDIO                                                       ║
 # ╚══════════════════════════════════════════════════════════════════════════╝
 
+SQL_AUDIO_SONG = ("SELECT source_id, embedding <=> %s AS dist "
+                  "FROM embeddings_audio_song ORDER BY dist LIMIT %s")
+
+_song_table_lista = False
+
+
+def _materializar_songs_audio(dim: int) -> None:
+    """Crea embeddings_audio_song: UN vector por canción (AVG de sus chunks)
+    con índice HNSW propio.
+
+    Los chunks de audio son ventanas de 150 ms con histogramas casi vacíos:
+    con coseno, miles de chunks empatan a distancia 0 y el LIMIT corta
+    arbitrariamente, así que el Lado B por-chunk no puede recuperar la
+    canción original a escala. El Lado A ya agrega por canción en su índice
+    invertido; esta tabla le da al Lado B la misma granularidad. Se
+    reconstruye una vez por proceso (la ingesta pudo cambiar la escala)."""
+    global _song_table_lista
+    if _song_table_lista:
+        return
+    with get_conn() as conn:
+        conn.execute("DROP TABLE IF EXISTS embeddings_audio_song")
+        conn.execute(
+            f"CREATE TABLE embeddings_audio_song AS "
+            f"SELECT source_id, AVG(embedding)::vector({int(dim)}) AS embedding "
+            f"FROM embeddings_audio GROUP BY source_id"
+        )
+        conn.execute(
+            "CREATE INDEX idx_emb_audio_song_hnsw ON embeddings_audio_song "
+            "USING hnsw (embedding vector_cosine_ops)"
+        )
+    _song_table_lista = True
+
+
 def evaluar_audio(audio_path: str, k: int) -> dict:
     with get_conn() as conn:
         row = conn.execute(
@@ -407,57 +480,53 @@ def evaluar_audio(audio_path: str, k: int) -> dict:
     chunks   = splitter.split(audio_path, source_id="query")
     descs    = extractor.extract(chunks)
 
-    # ── Lado A ───────────────────────────────────────────────────────────
-    # Pool de candidatos k*3 por ventana antes de agregar por canción, para
-    # que el ranking final no dependa solo de los primeros matches.
+    # La query completa como UN histograma (igual que texto): las ventanas
+    # de 150 ms tienen histogramas casi vacíos que empatan contra miles de
+    # canciones, y el pool por ventana corta arbitrariamente; agregada, la
+    # query sí es discriminativa. Ambos lados consultan con este histograma.
+    merged: dict[int, int] = {}
+    for d in descs:
+        for cw, c in codebook.encode(d).counts.items():
+            merged[cw] = merged.get(cw, 0) + c
+    qh = Histogram(chunk_id="query", source_id="query", counts=merged)
+
+    # ── Lado A (índice invertido agregado por canción) ───────────────────
     def lado_a():
-        puntajes: dict[str, float] = defaultdict(float)
-        for d in descs:
-            h = codebook.encode(d)
-            if not h.counts:
-                continue
-            for r in index.search(h, k=k * 3):
-                puntajes[r.source_id] += r.score
-        return sorted(puntajes, key=puntajes.__getitem__, reverse=True)[:k]
+        return [r.source_id for r in index.search(qh, k=k)][:k]
 
     top_a, ms_a, ram_a, pico_a, io_reads_a, io_mb_a = _medir(lado_a)
 
-    # ── Lado B (pgvector) ─────────────────────────────────────────────────
+    # ── Lado B (pgvector, agregado por canción) ──────────────────────────
+    # Misma granularidad que el Lado A: un vector por canción
+    # (embeddings_audio_song) y la misma query agregada.
+    _materializar_songs_audio(k_cb)
+    qvec = _counts_a_vec(merged, k_cb)
+
     def lado_b():
-        puntajes: dict[str, float] = defaultdict(float)
         with get_conn() as conn:
             register_vector(conn)
-            for d in descs:
-                h = codebook.encode(d)
-                qvec = _counts_a_vec(h.counts, k_cb)
-                if qvec.sum() == 0:
-                    continue
-                rows = conn.execute(
-                    "SELECT source_id, embedding <=> %s AS dist "
-                    "FROM embeddings_audio ORDER BY dist LIMIT %s",
-                    (qvec, k * 3),
-                ).fetchall()
-                for sid, dist in rows:
-                    puntajes[str(sid)] += 1.0 - float(dist)
-        return sorted(puntajes, key=puntajes.__getitem__, reverse=True)[:k]
+            with conn.transaction():
+                # Ídem imagen: forzar HNSW también a escalas chicas.
+                conn.execute("SET LOCAL enable_seqscan = off")
+                rows = conn.execute(SQL_AUDIO_SONG, (qvec, k)).fetchall()
+        return [str(sid) for sid, _ in rows]
 
     top_b, ms_b, ram_b, pico_b, _, _ = _medir(lado_b)
 
     # ── I/O Postgres ──────────────────────────────────────────────────────
-    io_b = {"shared_hit": -1, "shared_read": -1}
-    if descs:
-        h0   = codebook.encode(descs[0])
-        qvec0 = _counts_a_vec(h0.counts, k_cb)
+    io_b = {"shared_hit": -1, "shared_read": -1, "indices": []}
+    if qvec.sum() > 0:
         try:
             with get_conn() as conn:
                 register_vector(conn)
-                sql = ("SELECT source_id, embedding <=> %s AS dist "
-                       "FROM embeddings_audio ORDER BY dist LIMIT %s")
-                io_b = _explain_buffers(sql, (qvec0, k), conn)
+                with conn.transaction():
+                    conn.execute("SET LOCAL enable_seqscan = off")
+                    io_b = _explain_buffers(SQL_AUDIO_SONG, (qvec, k), conn)
         except Exception:
             pass
 
     return {
+        "indices_b":          {"hnsw": io_b["indices"]},
         "query":              audio_path,
         "lado_a_latencia_ms": round(ms_a, 3),
         "lado_a_qps":         round(1000 / ms_a, 2) if ms_a > 0 else 0,
@@ -615,11 +684,16 @@ def main() -> None:
         "lado_a_ram_delta_mb", "lado_a_mem_pico_mb",
         "lado_a_io_reads", "lado_a_io_read_mb",
         "lado_a_io_load_mb", "lado_a_index_mb",
-        "lado_a_precision", "lado_a_recall",
+        "lado_a_precision", "lado_a_recall", "lado_a_rr",
         "lado_b_latencia_ms", "lado_b_qps",
         "lado_b_ram_delta_mb", "lado_b_mem_pico_mb",
-        "lado_b_precision", "lado_b_recall",
+        "lado_b_precision", "lado_b_recall", "lado_b_rr",
         "lado_b_io_shared_hit", "lado_b_io_shared_read",
+        # Solo texto: GiST medido por separado (lado_b = GIN forzado)
+        "lado_b_gist_latencia_ms", "lado_b_gist_qps",
+        "lado_b_gist_ram_delta_mb", "lado_b_gist_mem_pico_mb",
+        "lado_b_gist_io_shared_hit", "lado_b_gist_io_shared_read",
+        "lado_b_gist_rr",
         "overlap_at_k",
     ]
 
@@ -632,6 +706,7 @@ def main() -> None:
         writer = csv.DictWriter(fcsv, fieldnames=FIELDNAMES)
         writer.writeheader()
 
+        indices_verificados = False
         for q, qsid in queries:
             qlabel = labels.get(qsid) if qsid else None
             for run in range(1, args.runs + 1):
@@ -639,14 +714,25 @@ def main() -> None:
                     print(f"  → [{args.modality.upper()}] run={run} | q={str(q)[:60]!r}")
                     metrics = evaluador(q, args.k)
 
+                    if not indices_verificados and metrics.get("indices_b"):
+                        print(f"     [VERIFICACIÓN] Índices usados por el Lado B "
+                              f"(EXPLAIN): {metrics['indices_b']}")
+                        indices_verificados = True
+
                     prec_a, rec_a = _precision_recall(
                         metrics["top_a"], qsid, qlabel, labels, total_por_label, args.k)
                     prec_b, rec_b = _precision_recall(
                         metrics["top_b"], qsid, qlabel, labels, total_por_label, args.k)
+                    rr_a = _reciprocal_rank(metrics["top_a"], qsid, args.k)
+                    rr_b = _reciprocal_rank(metrics["top_b"], qsid, args.k)
                     metrics.update({
                         "lado_a_precision": prec_a, "lado_a_recall": rec_a,
                         "lado_b_precision": prec_b, "lado_b_recall": rec_b,
+                        "lado_a_rr": rr_a, "lado_b_rr": rr_b,
                     })
+                    if "top_b_gist" in metrics:
+                        metrics["lado_b_gist_rr"] = _reciprocal_rank(
+                            metrics["top_b_gist"], qsid, args.k)
 
                     row = {
                         "scale":       args.scale,
@@ -659,8 +745,9 @@ def main() -> None:
                     }
                     writer.writerow(row)
                     fcsv.flush()  # Escribir de inmediato por si se interrumpe
-                    prec_txt = (f"P@{args.k} A/B: {prec_a:.2f}/{prec_b:.2f}"
-                                if qlabel else "P@k: sin etiqueta")
+                    prec_txt = (f"P@{args.k} A/B: {prec_a:.2f}/{prec_b:.2f} | "
+                                f"RR A/B: {rr_a:.2f}/{rr_b:.2f}"
+                                if qlabel else "P@k / RR: sin etiqueta")
                     print(f"     Lado A: {metrics['lado_a_latencia_ms']:.1f} ms | "
                           f"Lado B: {metrics['lado_b_latencia_ms']:.1f} ms | "
                           f"{prec_txt} | overlap: {metrics['overlap_at_k']:.2%}")
@@ -697,10 +784,29 @@ def main() -> None:
               f"(índice: {_avg('lado_a_index_mb'):.2f} MB en disco)")
         print(f"  IO shared_hit prom Lado B : {_avg('lado_b_io_shared_hit'):.0f} bloques")
         print(f"  IO shared_read pro Lado B : {_avg('lado_b_io_shared_read'):.0f} bloques")
-        print(f"  Precision@{args.k} prom.  Lado A : {_avg('lado_a_precision'):.2%}")
-        print(f"  Precision@{args.k} prom.  Lado B : {_avg('lado_b_precision'):.2%}")
-        print(f"  Recall@{args.k} prom.     Lado A : {_avg('lado_a_recall'):.2%}")
-        print(f"  Recall@{args.k} prom.     Lado B : {_avg('lado_b_recall'):.2%}")
+        if args.modality == "image":
+            # Imagen: la métrica principal de calidad es precision@k.
+            print(f"  Precision@{args.k} prom.  Lado A : {_avg('lado_a_precision'):.2%}")
+            print(f"  Precision@{args.k} prom.  Lado B : {_avg('lado_b_precision'):.2%}")
+            print(f"  Recall@{args.k} prom.     Lado A : {_avg('lado_a_recall'):.2%}")
+            print(f"  Recall@{args.k} prom.     Lado B : {_avg('lado_b_recall'):.2%}")
+        else:
+            # Texto y audio: la métrica principal de calidad es MRR
+            # (promedio de 1/rank del primer resultado relevante).
+            print(f"  MRR@{args.k} prom.        Lado A : {_avg('lado_a_rr'):.2%}")
+            print(f"  MRR@{args.k} prom.        Lado B : {_avg('lado_b_rr'):.2%}")
+        if args.modality == "text":
+            print(f"\n  ── GIN vs GiST (Lado B texto) ──")
+            print(f"  Latencia GIN  : {_avg('lado_b_latencia_ms'):.2f} ms | "
+                  f"GiST: {_avg('lado_b_gist_latencia_ms'):.2f} ms")
+            print(f"  QPS GIN       : {_avg('lado_b_qps'):.2f} | "
+                  f"GiST: {_avg('lado_b_gist_qps'):.2f}")
+            print(f"  MRR@{args.k} GIN     : {_avg('lado_b_rr'):.2%} | "
+                  f"GiST: {_avg('lado_b_gist_rr'):.2%}")
+            print(f"  IO hit/read GIN: {_avg('lado_b_io_shared_hit'):.0f}/"
+                  f"{_avg('lado_b_io_shared_read'):.0f} bloques | GiST: "
+                  f"{_avg('lado_b_gist_io_shared_hit'):.0f}/"
+                  f"{_avg('lado_b_gist_io_shared_read'):.0f}")
         print(f"  Overlap@{args.k} promedio : {_avg('overlap_at_k'):.2%}")
         print("═════════════════════════════════════════════════════")
     except Exception:
