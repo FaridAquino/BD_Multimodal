@@ -1,0 +1,67 @@
+scale,real_chunks,modality,query,run,lado_a_latencia_ms,lado_a_qps,lado_a_ram_delta_mb,lado_a_mem_pico_mb,lado_a_io_reads,lado_a_io_read_mb,lado_a_io_load_mb,lado_a_index_mb,lado_a_precision,lado_a_recall,lado_a_rr,lado_b_latencia_ms,lado_b_qps,lado_b_ram_delta_mb,lado_b_mem_pico_mb,lado_b_precision,lado_b_recall,lado_b_rr,lado_b_io_shared_hit,lado_b_io_shared_read,lado_b_gist_latencia_ms,lado_b_gist_qps,lado_b_gist_ram_delta_mb,lado_b_gist_mem_pico_mb,lado_b_gist_io_shared_hit,lado_b_gist_io_shared_read,lado_b_gist_rr,overlap_at_k
+1k,1000,text,[Chorus],1,0.269,3713.33,0.0078,0.1056,0,0.0,0.2212,0.1866,0.1111,0.0526,0.25,7.506,133.22,0.0078,0.0035,0.1111,0.0526,0.1111,20,0,2.534,394.65,0.0,0.0034,19,0,0.1111,0.9
+1k,1000,text,[Chorus],2,0.217,4612.55,0.0,0.1056,0,0.0,0.2212,0.1866,0.1111,0.0526,0.25,1.139,877.65,0.0,0.0034,0.1111,0.0526,0.1111,20,0,0.835,1197.46,0.0,0.0033,19,0,0.1111,0.9
+1k,1000,text,[Chorus],3,0.244,4098.36,0.0,0.1056,0,0.0,0.2212,0.1866,0.1111,0.0526,0.25,0.906,1103.75,0.0,0.0033,0.1111,0.0526,0.1111,20,0,0.885,1130.07,0.0,0.0032,19,0,0.1111,0.9
+1k,1000,text,"Wait a minute, it stopped hailing  
+Guys are swimming, gals are sailing  
+Playing base ball, gee that's bedda  
+Mudda fudda kindly disregard this letter!",1,0.435,2298.32,0.0,0.1142,0,0.0,0.2212,0.1866,0.0,0.0,1.0,2.506,399.01,0.0,0.0034,0.2222,0.2857,1.0,78,0,1.957,510.93,0.0,0.0034,80,0,1.0,0.2
+1k,1000,text,"Wait a minute, it stopped hailing  
+Guys are swimming, gals are sailing  
+Playing base ball, gee that's bedda  
+Mudda fudda kindly disregard this letter!",2,0.46,2172.02,0.0,0.1142,0,0.0,0.2212,0.1866,0.0,0.0,1.0,2.388,418.67,0.0,0.0034,0.2222,0.2857,1.0,78,0,1.735,576.5,0.0,0.0034,80,0,1.0,0.2
+1k,1000,text,"Wait a minute, it stopped hailing  
+Guys are swimming, gals are sailing  
+Playing base ball, gee that's bedda  
+Mudda fudda kindly disregard this letter!",3,0.369,2710.03,0.0,0.1142,0,0.0,0.2212,0.1866,0.0,0.0,1.0,2.36,423.73,0.0,0.0034,0.2222,0.2857,1.0,78,0,1.763,567.05,0.0,0.0034,80,0,1.0,0.2
+1k,1000,text,"Long awaited darkness falls  
+Casting shadows on the walls  
+In the twilight hour I am alone  
+Sitting near the fireplace  
+Dying embers warm my face  
+In this peaceful solitude  
+All the outside worl",1,0.451,2216.8,0.0,0.1168,0,0.0,0.2212,0.1866,0.6667,0.0536,0.5,2.63,380.23,0.0,0.0035,0.7778,0.0625,0.5,74,0,2.279,438.77,0.0,0.0034,76,0,0.5,0.6
+1k,1000,text,"Long awaited darkness falls  
+Casting shadows on the walls  
+In the twilight hour I am alone  
+Sitting near the fireplace  
+Dying embers warm my face  
+In this peaceful solitude  
+All the outside worl",2,0.413,2422.48,0.0,0.1168,0,0.0,0.2212,0.1866,0.6667,0.0536,0.5,2.899,344.99,0.0,0.0035,0.7778,0.0625,0.5,74,0,2.131,469.18,0.0,0.0034,76,0,0.5,0.6
+1k,1000,text,"Long awaited darkness falls  
+Casting shadows on the walls  
+In the twilight hour I am alone  
+Sitting near the fireplace  
+Dying embers warm my face  
+In this peaceful solitude  
+All the outside worl",3,0.434,2305.21,0.0,0.1168,0,0.0,0.2212,0.1866,0.6667,0.0536,0.5,2.687,372.2,0.0,0.0035,0.7778,0.0625,0.5,74,0,2.104,475.38,0.0,0.0034,76,0,0.5,0.6
+1k,1000,text,"Love me two time baby  
+Love me twice today  
+Love me two time baby  
+Well I'm goin' away  
+Love me two time girl  
+Once for tomorrow, once just for today  
+Love me two times I'm goin' away, yeah  
+Lo",1,0.751,1332.27,0.0,0.186,0,0.0,0.2212,0.1866,0.2222,0.1053,1.0,3.495,286.14,0.0,0.0035,0.3333,0.1579,1.0,80,0,3.252,307.46,0.0,0.0034,80,0,1.0,0.1
+1k,1000,text,"Love me two time baby  
+Love me twice today  
+Love me two time baby  
+Well I'm goin' away  
+Love me two time girl  
+Once for tomorrow, once just for today  
+Love me two times I'm goin' away, yeah  
+Lo",2,0.733,1365.19,0.0,0.186,0,0.0,0.2212,0.1866,0.2222,0.1053,1.0,3.387,295.22,0.0,0.0035,0.3333,0.1579,1.0,80,0,3.31,302.13,0.0,0.0034,80,0,1.0,0.1
+1k,1000,text,"Love me two time baby  
+Love me twice today  
+Love me two time baby  
+Well I'm goin' away  
+Love me two time girl  
+Once for tomorrow, once just for today  
+Love me two times I'm goin' away, yeah  
+Lo",3,0.941,1062.7,0.0,0.186,0,0.0,0.2212,0.1866,0.2222,0.1053,1.0,3.46,289.05,0.0,0.0035,0.3333,0.1579,1.0,80,0,3.416,292.72,0.0,0.0034,80,0,1.0,0.1
+1k,1000,text,"I don't care if they're watching 'cause listen  
+We've got a reason for each time we're kissing",1,0.525,1904.4,0.0,0.1399,0,0.0,0.2212,0.1866,0.6667,0.0536,1.0,2.112,473.57,0.0,0.0034,0.4444,0.0357,1.0,80,0,1.935,516.82,0.0,0.0033,80,0,1.0,0.1
+1k,1000,text,"I don't care if they're watching 'cause listen  
+We've got a reason for each time we're kissing",2,0.588,1701.84,0.0,0.1399,0,0.0,0.2212,0.1866,0.6667,0.0536,1.0,2.205,453.51,0.0039,0.0034,0.4444,0.0357,1.0,80,0,2.033,491.96,0.0,0.0033,80,0,1.0,0.1
+1k,1000,text,"I don't care if they're watching 'cause listen  
+We've got a reason for each time we're kissing",3,0.534,1871.61,0.0,0.1399,0,0.0,0.2212,0.1866,0.6667,0.0536,1.0,2.509,398.52,0.0,0.0034,0.4444,0.0357,1.0,80,0,2.078,481.3,0.0,0.0033,80,0,1.0,0.1
