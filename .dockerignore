@@ -1,0 +1,32 @@
+# Contexto de build de la imagen `app`.
+# Se EXCLUYE lo pesado/local; se INCLUYEN data/samples/ y models/ (artefactos
+# del demo) para que la imagen publicada en Docker Hub sea autocontenida.
+
+.git
+.gitignore
+.github
+
+# Entornos y caché
+.venv
+venv
+__pycache__
+**/__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+.mypy_cache
+
+# Datasets crudos pesados (NO van a la imagen; sí van data/samples/)
+data/raw
+data/processed
+*.zip
+*.parquet
+
+# Resultados y secretos
+results/raw
+.env
+
+# SO / editor
+.DS_Store
+.idea
+.vscode

@@ -1,0 +1,76 @@
+scale,real_chunks,modality,query,run,lado_a_latencia_ms,lado_a_qps,lado_a_ram_delta_mb,lado_a_mem_pico_mb,lado_a_io_reads,lado_a_io_read_mb,lado_a_io_load_mb,lado_a_index_mb,lado_a_precision,lado_a_recall,lado_a_rr,lado_b_latencia_ms,lado_b_qps,lado_b_ram_delta_mb,lado_b_mem_pico_mb,lado_b_precision,lado_b_recall,lado_b_rr,lado_b_io_shared_hit,lado_b_io_shared_read,lado_b_gist_latencia_ms,lado_b_gist_qps,lado_b_gist_ram_delta_mb,lado_b_gist_mem_pico_mb,lado_b_gist_io_shared_hit,lado_b_gist_io_shared_read,lado_b_gist_rr,overlap_at_k
+10k,10000,text,"Head over heels  
+Breaking her way  
+Pushing through unknown jungles every day  
+She's a girl with a taste for the world  
+(The world is like a playing ground where she goes rushing)  
+Head over heels",1,11.646,85.87,0.9492,1.0441,0,0.0,1.7447,1.672,0.0,0.0,1.0,20.811,48.05,0.0039,0.0037,0.0,0.0,1.0,693,0,17.774,56.26,0.0,0.0036,879,0,1.0,0.1
+10k,10000,text,"Head over heels  
+Breaking her way  
+Pushing through unknown jungles every day  
+She's a girl with a taste for the world  
+(The world is like a playing ground where she goes rushing)  
+Head over heels",2,5.357,186.68,0.8008,1.0441,0,0.0,1.7447,1.672,0.0,0.0,1.0,9.673,103.38,0.0,0.0036,0.0,0.0,1.0,693,0,16.151,61.91,0.0,0.0035,879,0,1.0,0.1
+10k,10000,text,"Head over heels  
+Breaking her way  
+Pushing through unknown jungles every day  
+She's a girl with a taste for the world  
+(The world is like a playing ground where she goes rushing)  
+Head over heels",3,5.827,171.61,0.8047,1.0441,0,0.0,1.7447,1.672,0.0,0.0,1.0,10.19,98.13,0.0,0.0035,0.0,0.0,1.0,693,0,15.367,65.08,0.0,0.0034,879,0,1.0,0.1
+10k,10000,text,"Mary, Mark, Luke and John  
+All these prophets are dead and gone  
+Keep your hand on that plow, hold on  
+Oh Lord, Oh Lord, keep your hand on that plow, hold on.",1,3.35,298.47,0.0,0.6655,0,0.0,1.7447,1.672,0.0,0.0,1.0,6.252,159.96,0.0,0.0034,0.0,0.0,1.0,615,0,10.597,94.37,0.0,0.0034,768,0,1.0,0.1
+10k,10000,text,"Mary, Mark, Luke and John  
+All these prophets are dead and gone  
+Keep your hand on that plow, hold on  
+Oh Lord, Oh Lord, keep your hand on that plow, hold on.",2,5.481,182.44,0.0,0.6655,0,0.0,1.7447,1.672,0.0,0.0,1.0,6.22,160.78,0.0,0.0034,0.0,0.0,1.0,615,0,10.407,96.09,0.0,0.0034,768,0,1.0,0.1
+10k,10000,text,"Mary, Mark, Luke and John  
+All these prophets are dead and gone  
+Keep your hand on that plow, hold on  
+Oh Lord, Oh Lord, keep your hand on that plow, hold on.",3,3.686,271.32,0.0,0.6655,0,0.0,1.7447,1.672,0.0,0.0,1.0,6.026,165.93,0.0,0.0034,0.0,0.0,1.0,615,0,10.506,95.18,0.0,0.0034,768,0,1.0,0.1
+10k,10000,text,"I want a gown of diamonds  
+Long gloves and sweet perfumes  
+Hats made of silks and satins  
+Seaqueens and ostrich plums  
+I want to wear mascara  
+Polish my nails real bright  
+I want to be an actres",1,4.827,207.19,0.0,0.5999,0,0.0,1.7447,1.672,0.1111,0.0108,1.0,7.041,142.04,0.0,0.0035,0.1111,0.0108,1.0,638,0,12.002,83.32,0.0,0.0034,786,0,1.0,0.1
+10k,10000,text,"I want a gown of diamonds  
+Long gloves and sweet perfumes  
+Hats made of silks and satins  
+Seaqueens and ostrich plums  
+I want to wear mascara  
+Polish my nails real bright  
+I want to be an actres",2,3.578,279.48,0.0,0.5999,0,0.0,1.7447,1.672,0.1111,0.0108,1.0,6.606,151.39,0.0,0.0035,0.1111,0.0108,1.0,638,0,12.465,80.22,0.0,0.0034,786,0,1.0,0.1
+10k,10000,text,"I want a gown of diamonds  
+Long gloves and sweet perfumes  
+Hats made of silks and satins  
+Seaqueens and ostrich plums  
+I want to wear mascara  
+Polish my nails real bright  
+I want to be an actres",3,3.176,314.88,0.0,0.5999,0,0.0,1.7447,1.672,0.1111,0.0108,1.0,6.691,149.46,0.0,0.0035,0.1111,0.0108,1.0,638,0,12.077,82.8,0.0,0.0034,786,0,1.0,0.1
+10k,10000,text,"I want you to put your trust in me  
+Say goodbye to all your heartaches as fast as you can  
+I need you to surrender to me all your body and soul  
+And the spirit we seek will enter us both and make u",1,5.166,193.56,0.0,0.9594,0,0.0,1.7447,1.672,0.0,0.0,1.0,8.617,116.06,0.0,0.0035,0.1111,0.0091,1.0,657,0,13.242,75.52,0.0,0.0034,827,0,1.0,0.2
+10k,10000,text,"I want you to put your trust in me  
+Say goodbye to all your heartaches as fast as you can  
+I need you to surrender to me all your body and soul  
+And the spirit we seek will enter us both and make u",2,4.734,211.25,0.0,0.9594,0,0.0,1.7447,1.672,0.0,0.0,1.0,8.436,118.54,0.0,0.0035,0.1111,0.0091,1.0,657,0,14.262,70.12,0.0,0.0034,827,0,1.0,0.2
+10k,10000,text,"I want you to put your trust in me  
+Say goodbye to all your heartaches as fast as you can  
+I need you to surrender to me all your body and soul  
+And the spirit we seek will enter us both and make u",3,7.657,130.6,0.0,0.9594,0,0.0,1.7447,1.672,0.0,0.0,1.0,8.568,116.71,0.0,0.0035,0.1111,0.0091,1.0,657,0,13.351,74.9,0.0,0.0034,827,0,1.0,0.2
+10k,10000,text,"I looked out across the universe  
+And thought of you  
+You're dizzy  
+And I am dizzy too",1,2.022,494.61,0.0,0.375,0,0.0,1.7447,1.672,0.0,0.0,1.0,4.222,236.85,0.0,0.0034,0.0,0.0,1.0,615,0,5.945,168.2,0.0,0.0033,797,0,1.0,0.3
+10k,10000,text,"I looked out across the universe  
+And thought of you  
+You're dizzy  
+And I am dizzy too",2,2.571,388.98,0.0,0.375,0,0.0,1.7447,1.672,0.0,0.0,1.0,3.981,251.22,0.0,0.0034,0.0,0.0,1.0,615,0,6.195,161.41,0.0,0.0033,797,0,1.0,0.3
+10k,10000,text,"I looked out across the universe  
+And thought of you  
+You're dizzy  
+And I am dizzy too",3,1.94,515.49,0.0,0.375,0,0.0,1.7447,1.672,0.0,0.0,1.0,3.82,261.8,0.0,0.0034,0.0,0.0,1.0,615,0,5.674,176.24,0.0,0.0033,797,0,1.0,0.3

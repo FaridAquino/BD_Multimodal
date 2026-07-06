@@ -1,0 +1,52 @@
+scale,real_chunks,modality,query,run,lado_a_latencia_ms,lado_a_qps,lado_a_ram_delta_mb,lado_a_mem_pico_mb,lado_a_precision,lado_a_recall,lado_b_latencia_ms,lado_b_qps,lado_b_ram_delta_mb,lado_b_mem_pico_mb,lado_b_precision,lado_b_recall,lado_b_io_shared_hit,lado_b_io_shared_read,overlap_at_k
+100k,100000,text,"Everybody's gone away  
+Said they're movin' to L.A.  
+There's not a soul I know around  
+Everybody's leavin' town.",1,102.047,9.8,6.3164,8.3764,0.0,0.0,96.293,10.39,0.0078,0.0049,0.0,0.0,7309,0,0.1
+100k,100000,text,"Everybody's gone away  
+Said they're movin' to L.A.  
+There's not a soul I know around  
+Everybody's leavin' town.",2,89.83,11.13,5.3906,8.3764,0.0,0.0,87.946,11.37,0.0039,0.0049,0.0,0.0,7309,0,0.1
+100k,100000,text,"Everybody's gone away  
+Said they're movin' to L.A.  
+There's not a soul I know around  
+Everybody's leavin' town.",3,134.575,7.43,4.7539,8.3764,0.0,0.0,111.203,8.99,0.0,0.0048,0.0,0.0,7309,0,0.1
+100k,100000,text,"I want to be up on the roof  
+I've gotta be up on the roof  
+Up, up high on the roof  
+Up, up on the roof  
+In the sun",1,46.297,21.6,3.3555,3.5546,0.0,0.0,48.208,20.74,0.0078,0.0048,0.0,0.0,6570,0,0.1
+100k,100000,text,"I want to be up on the roof  
+I've gotta be up on the roof  
+Up, up high on the roof  
+Up, up on the roof  
+In the sun",2,49.218,20.32,3.0469,3.5546,0.0,0.0,47.58,21.02,0.0039,0.0047,0.0,0.0,6570,0,0.1
+100k,100000,text,"I want to be up on the roof  
+I've gotta be up on the roof  
+Up, up high on the roof  
+Up, up on the roof  
+In the sun",3,35.203,28.41,3.3477,3.5546,0.0,0.0,41.899,23.87,0.0078,0.0049,0.0,0.0,6570,0,0.1
+100k,100000,text,Oooo,1,0.985,1015.43,0.1133,0.2322,0.0,0.0,4.259,234.8,0.0039,0.0045,0.0,0.0,99,0,0.5
+100k,100000,text,Oooo,2,0.84,1190.48,0.0781,0.2322,0.0,0.0,3.954,252.89,0.0039,0.0044,0.0,0.0,99,0,0.5
+100k,100000,text,Oooo,3,0.779,1283.2,0.0781,0.2322,0.0,0.0,3.107,321.85,0.0039,0.0044,0.0,0.0,99,0,0.5
+100k,100000,text,"(Your cheatin' heart will make you weep)  
+Your cheatin' heart will make you weep you'll cry and cry you'll try to sleep  
+But sleep won't come the whole night through your cheatin' heart will tell on",1,104.924,9.53,4.3086,8.7952,0.0,0.0,144.458,6.92,0.0039,0.0046,0.0,0.0,7410,0,0.5
+100k,100000,text,"(Your cheatin' heart will make you weep)  
+Your cheatin' heart will make you weep you'll cry and cry you'll try to sleep  
+But sleep won't come the whole night through your cheatin' heart will tell on",2,88.61,11.29,4.1211,8.7953,0.0,0.0,1704.404,0.59,0.0039,0.0046,0.0,0.0,7410,0,0.5
+100k,100000,text,"(Your cheatin' heart will make you weep)  
+Your cheatin' heart will make you weep you'll cry and cry you'll try to sleep  
+But sleep won't come the whole night through your cheatin' heart will tell on",3,95.071,10.52,3.9102,8.7952,0.0,0.0,1581.025,0.63,0.0039,0.0046,0.0,0.0,7410,0,0.5
+100k,100000,text,"I press on the elastic sheet, I'm breathing through the slice  
+'Are they worms or are they serpents? ' bubbles through the ice  
+The source was quite invisible, the ever-present voice  
+While skating",1,14.87,67.25,1.6328,1.9012,0.0,0.0,858.758,1.16,0.0039,0.0046,0.0,0.0,6919,0,0.1
+100k,100000,text,"I press on the elastic sheet, I'm breathing through the slice  
+'Are they worms or are they serpents? ' bubbles through the ice  
+The source was quite invisible, the ever-present voice  
+While skating",2,19.734,50.67,1.6602,1.9012,0.0,0.0,1007.255,0.99,0.0039,0.0046,0.0,0.0,6919,0,0.1
+100k,100000,text,"I press on the elastic sheet, I'm breathing through the slice  
+'Are they worms or are they serpents? ' bubbles through the ice  
+The source was quite invisible, the ever-present voice  
+While skating",3,15.015,66.6,1.5586,1.9012,0.0,0.0,865.464,1.16,0.0,0.0046,0.0,0.0,6919,0,0.1

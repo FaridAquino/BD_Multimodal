@@ -1,0 +1,58 @@
+scale,real_chunks,modality,query,run,lado_a_latencia_ms,lado_a_qps,lado_a_ram_delta_mb,lado_a_mem_pico_mb,lado_a_io_reads,lado_a_io_read_mb,lado_a_io_load_mb,lado_a_index_mb,lado_a_precision,lado_a_recall,lado_a_rr,lado_b_latencia_ms,lado_b_qps,lado_b_ram_delta_mb,lado_b_mem_pico_mb,lado_b_precision,lado_b_recall,lado_b_rr,lado_b_io_shared_hit,lado_b_io_shared_read,lado_b_gist_latencia_ms,lado_b_gist_qps,lado_b_gist_ram_delta_mb,lado_b_gist_mem_pico_mb,lado_b_gist_io_shared_hit,lado_b_gist_io_shared_read,lado_b_gist_rr,overlap_at_k
+100k,100000,text,"All through my life of seasons  
+No matter how far I long  
+Always there's something missing inside  
+Yearning to come back home",1,187.715,5.33,5.4922,8.6915,0,0.0,17.6275,17.5556,0.0,0.0,1.0,192.024,5.21,0.0078,0.0036,0.0,0.0,1.0,7174,0,213.409,4.69,0.0,0.0035,10005,0,1.0,0.1
+100k,100000,text,"All through my life of seasons  
+No matter how far I long  
+Always there's something missing inside  
+Yearning to come back home",2,103.958,9.62,4.8555,8.6916,0,0.0,17.6275,17.5556,0.0,0.0,1.0,72.189,13.85,0.0,0.0035,0.0,0.0,1.0,7174,0,122.445,8.17,0.0,0.0034,10005,0,1.0,0.1
+100k,100000,text,"All through my life of seasons  
+No matter how far I long  
+Always there's something missing inside  
+Yearning to come back home",3,87.692,11.4,4.9102,8.6915,0,0.0,17.6275,17.5556,0.0,0.0,1.0,95.208,10.5,0.0,0.0034,0.0,0.0,1.0,7174,0,117.469,8.51,0.0,0.0034,10005,0,1.0,0.1
+100k,100000,text,"I need you to make me feel  
+I need you to make me feel  
+I need you to make me feel, whoa!",1,88.945,11.24,4.3633,4.8163,0,0.0,17.6275,17.5556,0.0,0.0,1.0,37.598,26.6,0.0,0.0034,0.0,0.0,1.0,6286,0,65.337,15.31,0.0,0.0033,8671,0,1.0,0.2
+100k,100000,text,"I need you to make me feel  
+I need you to make me feel  
+I need you to make me feel, whoa!",2,201.433,4.96,4.4766,4.8163,0,0.0,17.6275,17.5556,0.0,0.0,1.0,41.507,24.09,0.0,0.0034,0.0,0.0,1.0,6286,0,63.731,15.69,0.0,0.0033,8671,0,1.0,0.2
+100k,100000,text,"I need you to make me feel  
+I need you to make me feel  
+I need you to make me feel, whoa!",3,66.06,15.14,4.9219,4.8163,0,0.0,17.6275,17.5556,0.0,0.0,1.0,44.711,22.37,0.0,0.0034,0.0,0.0,1.0,6286,0,59.453,16.82,0.0,0.0033,8671,0,1.0,0.2
+100k,100000,text,"A woman is a creature that has always been strange  
+Just when you're sure of one, you find she's gone and made a change  
+And took my change",1,80.0,12.5,5.6992,6.4115,0,0.0,17.6275,17.5556,0.0,0.0,1.0,78.773,12.69,0.0,0.0034,0.0,0.0,1.0,7156,0,114.686,8.72,0.0,0.0034,9975,0,1.0,0.2
+100k,100000,text,"A woman is a creature that has always been strange  
+Just when you're sure of one, you find she's gone and made a change  
+And took my change",2,165.216,6.05,5.7305,6.4115,0,0.0,17.6275,17.5556,0.0,0.0,1.0,74.515,13.42,0.0,0.0034,0.0,0.0,1.0,7156,0,108.832,9.19,0.0,0.0034,9975,0,1.0,0.2
+100k,100000,text,"A woman is a creature that has always been strange  
+Just when you're sure of one, you find she's gone and made a change  
+And took my change",3,80.559,12.41,5.418,6.4115,0,0.0,17.6275,17.5556,0.0,0.0,1.0,76.076,13.14,0.0,0.0034,0.0,0.0,1.0,7156,0,115.358,8.67,0.0,0.0034,9975,0,1.0,0.2
+100k,100000,text,"Pressing the needle in... I feel the sting, it's emerencia  
+Injecting blood... into the both of us...it's hot",1,44.841,22.3,3.2344,3.3186,0,0.0,17.6275,17.5556,0.0,0.0,1.0,30.139,33.18,0.0,0.0034,0.0,0.0,1.0,5493,0,50.855,19.66,0.0,0.0033,7704,0,1.0,0.1
+100k,100000,text,"Pressing the needle in... I feel the sting, it's emerencia  
+Injecting blood... into the both of us...it's hot",2,48.645,20.56,2.8633,3.3186,0,0.0,17.6275,17.5556,0.0,0.0,1.0,29.495,33.9,0.0,0.0034,0.0,0.0,1.0,5493,0,50.566,19.78,0.0,0.0033,7704,0,1.0,0.1
+100k,100000,text,"Pressing the needle in... I feel the sting, it's emerencia  
+Injecting blood... into the both of us...it's hot",3,134.965,7.41,3.0195,3.3186,0,0.0,17.6275,17.5556,0.0,0.0,1.0,29.618,33.76,0.0,0.0034,0.0,0.0,1.0,5493,0,56.793,17.61,0.0,0.0033,7704,0,1.0,0.1
+100k,100000,text,"Workin', workin' up a black sweat  
+I'm workin', workin' up a black sweat  
+I'm workin'  
+Workin' up a black sweat  
+Workin', workin' up a black sweat  
+Workin' up a black sweat  
+Workin'",1,3.634,275.19,0.2852,0.4955,0,0.0,17.6275,17.5556,0.0,0.0,1.0,43.84,22.81,0.0,0.0035,0.0,0.0,1.0,6445,0,95.3,10.49,0.0,0.0034,8977,0,1.0,0.1
+100k,100000,text,"Workin', workin' up a black sweat  
+I'm workin', workin' up a black sweat  
+I'm workin'  
+Workin' up a black sweat  
+Workin', workin' up a black sweat  
+Workin' up a black sweat  
+Workin'",2,4.419,226.3,0.2891,0.4955,0,0.0,17.6275,17.5556,0.0,0.0,1.0,45.635,21.91,0.0,0.0035,0.0,0.0,1.0,6445,0,103.825,9.63,0.0,0.0034,8977,0,1.0,0.1
+100k,100000,text,"Workin', workin' up a black sweat  
+I'm workin', workin' up a black sweat  
+I'm workin'  
+Workin' up a black sweat  
+Workin', workin' up a black sweat  
+Workin' up a black sweat  
+Workin'",3,3.64,274.76,0.3672,0.4955,0,0.0,17.6275,17.5556,0.0,0.0,1.0,43.751,22.86,0.0,0.0035,0.0,0.0,1.0,6445,0,89.335,11.19,0.0,0.0034,8977,0,1.0,0.1

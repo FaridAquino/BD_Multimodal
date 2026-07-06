@@ -12,15 +12,15 @@
 -- ---------- TEXTO: full-text con GIN sobre tsvector ----------
 CREATE INDEX idx_chunks_tsv_gin ON chunks USING gin (tsv);
 -- Comparar GIN vs GiST (lo pide el enunciado):
--- CREATE INDEX idx_chunks_tsv_gist ON chunks USING gist (tsv);
+CREATE INDEX idx_chunks_tsv_gist ON chunks USING gist (tsv);
 
 -- ---------- IMAGEN: pgvector HNSW ----------
 CREATE INDEX idx_emb_image_hnsw
-    ON embeddings_image USING hnsw (embedding vector_l2_ops);
+    ON embeddings_image USING hnsw (embedding vector_cosine_ops);
 
 -- ---------- AUDIO: pgvector HNSW ----------
 CREATE INDEX idx_emb_audio_hnsw
-    ON embeddings_audio USING hnsw (embedding vector_l2_ops);
+    ON embeddings_audio USING hnsw (embedding vector_cosine_ops);
 
 -- ---------- Alternativa IVFFlat (comparar HNSW vs IVF) ----------
 -- CREATE INDEX idx_emb_image_ivf ON embeddings_image

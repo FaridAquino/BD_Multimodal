@@ -6,7 +6,7 @@
 -- ORGANIZACIÓN:
 --   A) Tablas COMUNES (agnósticas a la modalidad): sources, chunks,
 --      codebooks, histograms.
---   B) Específicas de TEXTO: codewords_text, postings.
+--   B) Específicas de TEXTO: codewords_text
 --   C) Específicas de IMAGEN: embeddings_image.
 --   D) Específicas de AUDIO:  embeddings_audio.
 -- =====================================================================
@@ -89,7 +89,7 @@ CREATE TABLE embeddings_image (
     chunk_id    BIGINT PRIMARY KEY REFERENCES chunks(id) ON DELETE CASCADE,
     codebook_id BIGINT NOT NULL REFERENCES codebooks(id) ON DELETE CASCADE,
     source_id   TEXT   NOT NULL,
-    embedding   vector(512) NOT NULL               -- <-- k_image (sincronizar con codebooks.k)
+    embedding   vector(256) NOT NULL               -- <-- k_image (sincronizar con codebooks.k)
 );
 
 

@@ -3,6 +3,10 @@ fastapi>=0.110
 uvicorn[standard]>=0.29
 python-multipart>=0.0.9
 
+# Frontend
+streamlit>=1.3
+requests>=2.31
+
 # Base de datos
 psycopg[binary]>=3.1
 psycopg_pool>=3.2
@@ -18,6 +22,7 @@ librosa>=0.10            # MFCC (audio)
 # Evaluación
 matplotlib>=3.8
 pandas>=2.2
+psutil>=5.9
 
 # Dev
 pytest>=8.0

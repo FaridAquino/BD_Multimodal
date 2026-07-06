@@ -8,6 +8,9 @@ venv/
 # Entorno
 .env
 
+# Salida de herramientas y skills (no se versiona)
+outputs/
+
 # Datos (no se versionan; se descargan con scripts/download_data.sh)
 data/raw/
 data/processed/
@@ -20,3 +23,11 @@ results/raw/
 .DS_Store
 .idea/
 .vscode/
+
+# Modelos: NO se versionan. Cada quien genera los suyos en local (codebook
+# K-Means de imagen/audio e índices de las 3 modalidades) al correr ingest +
+# build_index sobre data/samples/ (ver README).
+models/
+
+pruebas/
+add_song.py

@@ -1,7 +1,8 @@
 """Split de audio en ventanas deslizantes (100-200 ms).  OWNER: Ing. Audio."""
 from __future__ import annotations
-
+import librosa
 from src.core import Chunk, Modality, Splitter
+
 
 
 class SlidingWindowSplitter(Splitter):
@@ -11,6 +12,23 @@ class SlidingWindowSplitter(Splitter):
         self.window_ms = window_ms
         self.hop_ms = hop_ms
 
-    def split(self, content, source_id: str) -> list[Chunk]:
-        # TODO(audio): ventanas deslizantes sobre la señal.
-        raise NotImplementedError("Ing. Audio: implementar ventanas deslizantes")
+    def split(self, content: str, source_id: str) -> list[Chunk]:
+
+        y, sr = librosa.load(content, sr=None)  
+
+        window_samples = int(self.window_ms * sr / 1000)
+        hop_samples = int(self.hop_ms * sr / 1000)
+        
+        chunks = []
+        
+        for i, start in enumerate(range(0, len(y) - window_samples, hop_samples)):
+            segment = y[start : start + window_samples]
+            chunk = Chunk(
+                source_id=source_id,
+                modality=Modality.AUDIO,
+                payload=segment,
+                position=i
+            )
+            chunks.append(chunk)
+            
+        return chunks
