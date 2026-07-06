@@ -9,7 +9,7 @@ venv/
 .env
 
 # Salida de herramientas y skills (no se versiona)
-outputs/
+AGENTS.md
 
 # Datos (no se versionan; se descargan con scripts/download_data.sh)
 data/raw/
